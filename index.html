@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>High Bieren Spel</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      color: #2e3a59;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 2rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+    h1, h2, h3 {
+      text-align: center;
+      color: #374785;
+    }
+    .player-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      align-items: center;
+      flex-wrap: nowrap;
+    }
+    input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .score-buttons button {
+      margin: 0.2rem;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.3s ease;
+      background-color: #e0e0e0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .score-buttons button.selected {
+      background-color: #ff9800;
+      color: white;
+    }
+    .score-buttons button.bounce {
+      transform: scale(1.2);
+    }
+    .dice-animation {
+      font-size: 2rem;
+      animation: shake 1s ease-in-out;
+      text-align: center;
+    }
+    @keyframes shake {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(10deg); }
+      50% { transform: rotate(-10deg); }
+      75% { transform: rotate(10deg); }
+    }
+    hr {
+      border: none;
+      height: 1px;
+      background: #ccc;
+      margin: 2rem 0;
+    }
+    ul, ol {
+      padding-left: 1.5rem;
+    }
+    li {
+      margin-bottom: 0.5rem;
+    }
+    form {
+      margin-top: 1.5rem;
+    }
+    .score-buttons {
+      margin-bottom: 1rem;
+    }
+      @media print {
+      button, .score-buttons, .dice-animation { display: none !important; }
+      body {
+        background: white;
+        color: black;
+      }
+      .container {
+        box-shadow: none;
+        border: none;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .player-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .player-row input, .player-row button {
+        width: 100%;
+        margin-bottom: 0.3rem;
+      }
+    }
+      body {
+        background: white;
+        color: black;
+      }
+      .container {
+        box-shadow: none;
+        border: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="container" id="app"></div>
+
+  <script>
+    const app = document.getElementById('app');
+
+    let state = {
+      players: [],
+      round: 0,
+      currentBeer: null,
+      scores: []
+    };
+
+    function renderSetup() {
+      app.innerHTML = `
+        <h1>High Bieren</h1>
+        <h2>📜 Spelregels</h2>
+        <ul>
+          <li>Iedere speler neemt één soort bier mee met een duidelijk alcoholpercentage en hoeveelheid. Je neemt hier genoeg van mee voor elke deelnemer (dus bij 6 spelers, 6 stuks van jouw bier).</li>
+          <li>Per ronde wordt willekeurig één bier gekozen door het systeem (dobbelsteenrol).</li>
+          <li>Iedere speler beoordeelt het gekozen bier met een score van 1 t/m 10.</li>
+          <li>Spelers die geen score invullen in een ronde vallen automatisch af en kunnen geen verdere scores meer geven.</li>
+          <li>Na alle rondes wordt het gemiddelde per bier berekend, en de top 3 verschijnt op het podium.</li>
+          <li>Afvallers en volhouders worden vermeld in het eindresultaat.</li>
+          <li>Het eindresultaat kan worden gedeeld via WhatsApp.</li>
+        </ul>
+        <p><em>Door deel te nemen aan het spel ga je akkoord met bovenstaande regels.</em></p>
+        <h2>Spelers</h2>
+        <div id="players">
+          ${state.players.map((p, i) => `
+            <div class="player-row">
+              <input placeholder="Naam" value="${p.name}" oninput="updatePlayer(${i}, 'name', this.value)" />
+              <input placeholder="Bier" value="${p.beer}" oninput="updatePlayer(${i}, 'beer', this.value)" />
+              <input type="number" placeholder="Alcohol %" step="0.1" value="${p.abv}" oninput="updatePlayer(${i}, 'abv', this.value)" />
+              <input type="number" placeholder="ml" value="${p.ml}" oninput="updatePlayer(${i}, 'ml', this.value)" />
+              <button onclick="removePlayer(${i})">🗑</button>
+            </div>
+          `).join('')}
+        </div>
+        <button onclick="addPlayer()">+ Voeg Speler Toe</button>
+        <button onclick="startGame()">✅ Start Spel</button>
+      `;
+    }
+
+    function updatePlayer(i, field, value) {
+      if (field === 'abv' || field === 'ml') {
+        value = parseFloat(value);
+        if (isNaN(value)) value = 0;
+      }
+      state.players[i][field] = value;
+    }
+
+    function addPlayer() {
+      state.players.push({ name: '', beer: '', abv: 0.0, ml: 0.0, eliminated: false });
+      renderSetup();
+    }
+
+    function removePlayer(i) {
+      state.players.splice(i, 1);
+      renderSetup();
+    }
+
+    function startGame() {
+      if (state.players.length < 2) return alert('Minimaal 2 spelers vereist.');
+      if (!state.players.every(p => p.name && p.beer && p.abv > 0 && p.ml > 0)) return alert('Alle velden moeten correct ingevuld zijn.');
+      state.players.forEach(p => { p.eliminated = false; });
+      state.round = 0;
+      state.scores = [];
+      nextRound();
+    }
+
+    function nextRound() {
+      const played = state.scores.map(r => r.beer);
+      const remaining = state.players.filter(p => !played.includes(p.beer));
+      if (remaining.length === 0) return renderResults();
+
+      state.round++;
+      state.currentBeer = remaining[Math.floor(Math.random() * remaining.length)];
+      renderRound();
+    }
+
+    let selectedScores = {};
+
+    function renderRound() {
+      selectedScores = {};
+      const activePlayers = state.players.filter(p => !p.eliminated);
+      app.innerHTML = `
+        <h2>Ronde ${state.round}</h2>
+        <div class="dice-animation">🎲</div>
+        <h3>${state.currentBeer.beer} (${state.currentBeer.abv}% / ${state.currentBeer.ml}ml)</h3>
+        <p>Ingebracht door: ${state.currentBeer.name}</p>
+        <form id="scoreForm">
+          ${activePlayers.map(p => `
+            <div>
+              <strong>${p.name}</strong>
+              <div class="score-buttons" data-player="${p.name}">
+                ${[...Array(10).keys()].map(i => `
+                  <button type="button" data-score="${i + 1}">${i + 1}</button>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')}
+          <br><button type="submit">✅ Bevestig Ronde</button>
+        </form>
+        <hr>
+        <h3>📊 Tussenstand</h3>
+        <div id="round-history">
+          ${state.scores.map(r => `
+            <div><strong>${r.beer}</strong> (${r.owner}): ${r.scores.map(s => `${s.player} ➜ ${s.score}`).join(', ')}</div>
+          `).join('')}</div>
+      `;
+
+      document.querySelectorAll('.score-buttons').forEach(group => {
+        group.addEventListener('click', function(e) {
+          if (e.target.tagName === 'BUTTON') {
+            const score = parseInt(e.target.dataset.score);
+            const player = group.dataset.player.trim().toLowerCase();
+            selectedScores[player] = score;
+            group.querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
+            e.target.classList.add('selected');
+            e.target.classList.add('bounce');
+            setTimeout(() => e.target.classList.remove('bounce'), 300);
+          }
+        });
+      });
+
+      document.getElementById('scoreForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        confirmRound();
+      });
+    }
+
+    
+    function confirmRound() {
+      console.log('Bevestig ronde met scores:', selectedScores);
+      const round = {
+        beer: state.currentBeer.beer,
+        owner: state.currentBeer.name,
+        scores: [],
+        eliminated: []
+      };
+
+      for (const p of state.players) {
+        if (p.eliminated) continue;
+        if (selectedScores[p.name.trim().toLowerCase()]) {
+          round.scores.push({ player: p.name, score: selectedScores[p.name.trim().toLowerCase()] });
+        } else {
+          p.eliminated = true;
+          round.eliminated.push(p.name);
+        }
+      }
+
+      state.scores.push(round);
+      nextRound();
+    }
+
+    function copyResultsToClipboard() {
+  let text = '🏁 High Bieren Resultaat%0A';
+  const avg = state.scores.reduce((acc, r) => {
+    acc[r.beer] = acc[r.beer] || { total: 0, count: 0, owner: r.owner };
+    r.scores.forEach(s => {
+      acc[r.beer].total += s.score;
+      acc[r.beer].count++;
+    });
+    return acc;
+  }, {});
+
+  const list = Object.entries(avg).map(([beer, data]) => {
+    const avgScore = (data.total / data.count).toFixed(2);
+    return `${beer} (${avgScore}) van ${data.owner}`;
+  }).sort((a, b) => parseFloat(b.match(/\((.*?)\)/)[1]) - parseFloat(a.match(/\((.*?)\)/)[1]));
+
+  text += list.slice(0, 3).map((l, i) => `🥇${i + 1}. ${l}`).join('%0A');
+
+  const volhouders = state.players.filter(p => !p.eliminated).map(p => p.name);
+  const afvallers = [];
+  const rondeVanAfval = {};
+
+  state.scores.forEach((round, index) => {
+    round.eliminated.forEach(name => {
+      afvallers.push(name);
+      rondeVanAfval[name] = index + 1;
+    });
+  });
+
+  const lafste = afvallers.length
+    ? afvallers.filter(name => rondeVanAfval[name] === Math.min(...Object.values(rondeVanAfval)))
+    : [];
+
+  text += `%0A%0A✅ Volhouders: ${volhouders.length ? volhouders.join(', ') : 'Geen'}`;
+
+  if (lafste.length) {
+    text += `%0A%0A😵 Lafste Borrelaar(s):`;
+    lafste.forEach(name => {
+      text += `%0A- ${name} (ronde ${rondeVanAfval[name]})`;
+    });
+  }
+
+  if (afvallers.length) {
+    text += `%0A%0A❌ Afvallers:`;
+    afvallers.forEach(name => {
+      text += `%0A- ${name} (ronde ${rondeVanAfval[name]})`;
+    });
+  }
+
+  const playerTotals = {};
+  const avgScoreByJudge = {};
+
+  state.scores.forEach(round => {
+    round.scores.forEach(s => {
+      if (!playerTotals[s.player]) playerTotals[s.player] = 0;
+      const player = state.players.find(p => p.name === s.player);
+      playerTotals[s.player] += (player.abv * player.ml) / 100;
+
+      if (!avgScoreByJudge[s.player]) avgScoreByJudge[s.player] = { total: 0, count: 0 };
+      avgScoreByJudge[s.player].total += s.score;
+      avgScoreByJudge[s.player].count++;
+    });
+  });
+
+  
+  Object.entries(playerTotals).forEach(([name, alc]) => {
+    text += `%0A- ${name}: ${alc.toFixed(1)} ml`;
+  });
+
+  
+  Object.entries(avgScoreByJudge).forEach(([name, data]) => {
+    const avg = (data.total / data.count).toFixed(2);
+    text += `%0A- ${name}: ${avg}`;
+  });
+
+  const startTime = state.startTime || Date.now();
+  const totalTime = ((Date.now() - startTime) / 1000).toFixed(0);
+  text += `%0A%0A⏱️ Speeltijd: ${Math.floor(totalTime / 60)}m ${totalTime % 60}s`;
+
+  navigator.clipboard.writeText(decodeURIComponent(text));
+  alert('Resultaat gekopieerd naar klembord!');
+}
+
+function renderResults() {
+      
+      const startTime = state.startTime || Date.now();
+      const totalTime = ((Date.now() - startTime) / 1000).toFixed(0);
+      const avgScoreByJudge = {};
+      const allScores = {};
+      const playerTotals = {};
+      const afvallers = [];
+      const rondeVanAfval = {};
+
+      state.scores.forEach((round, index) => {
+        round.eliminated.forEach(name => {
+          afvallers.push(name);
+          rondeVanAfval[name] = index + 1;
+        });
+
+        round.scores.forEach(s => {
+          if (!allScores[round.beer]) allScores[round.beer] = [];
+          allScores[round.beer].push(s.score);
+
+          if (!playerTotals[s.player]) playerTotals[s.player] = 0;
+          const player = state.players.find(p => p.name === s.player);
+          playerTotals[s.player] += (player.abv * player.ml) / 100;
+
+          if (!avgScoreByJudge[s.player]) avgScoreByJudge[s.player] = { total: 0, count: 0 };
+          avgScoreByJudge[s.player].total += s.score;
+          avgScoreByJudge[s.player].count++;
+        });
+      });
+
+      const avg = Object.entries(allScores).map(([beer, scores]) => {
+        const owner = state.players.find(p => p.beer === beer).name;
+        const average = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2);
+        return { beer, average, owner };
+      }).sort((a, b) => b.average - a.average);
+
+      const volhouders = state.players.filter(p => !p.eliminated);
+      const earliestRound = Math.min(...Object.values(rondeVanAfval));
+      const laffeBorrelaars = afvallers.filter(name => rondeVanAfval[name] === earliestRound);
+      const lafste = laffeBorrelaars.length ? laffeBorrelaars : null;
+
+      app.innerHTML = `
+        <h1>🏁 Eindresultaat</h1>
+        <h2>🥇 Top 3 Bieren</h2>
+        <ol>
+          ${avg.slice(0, 3).map(b => `<li>${b.beer} (${b.average}) - ingebracht door ${b.owner}</li>`).join('')}
+        </ol>
+
+        <h3>📋 Scoretabel per Ronde</h3>
+        <table style="width:100%; border-collapse: collapse; margin-bottom: 2rem;">
+          <thead>
+            <tr style="background:#eee;">
+              <th style="border:1px solid #ccc; padding:6px;">Ronde</th>
+              <th style="border:1px solid #ccc; padding:6px;">Bier</th>
+              <th style="border:1px solid #ccc; padding:6px;">Eigenaar</th>
+              ${state.players.map(p => `<th style='border:1px solid #ccc; padding:6px;'>${p.name}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${state.scores.map((r, i) => `
+              <tr>
+                <td style="border:1px solid #ccc; padding:6px;">${i + 1}</td>
+                <td style="border:1px solid #ccc; padding:6px;">${r.beer}</td>
+                <td style="border:1px solid #ccc; padding:6px;">${r.owner}</td>
+                ${state.players.map(p => {
+                  const found = r.scores.find(s => s.player === p.name);
+                  return `<td style='border:1px solid #ccc; padding:6px; text-align:center;'>${found ? found.score : '-'}</td>`;
+                }).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table><h3>✅ Volhouders</h3>
+        <p>${volhouders.map(p => p.name).join(', ') || 'Geen'}</p>
+        ${lafste ? `<div style="margin-top: 3rem; padding: 1.5rem; background-color: #ffe0e0; border: 2px dashed #d32f2f; border-radius: 12px;"><h2 style="text-align:center; color:#d32f2f;">😵 Lafste Borrelaar(s)</h2><ul>${lafste.map(n => `<li>${n} (afgevallen in ronde ${rondeVanAfval[n]})</li>`).join('')}</ul></div>` : ''}
+        <h3>🍺 Alcohol geconsumeerd</h3>
+        <ul>
+          ${Object.entries(playerTotals).map(([name, alc]) => `<li>${name}: ${alc.toFixed(1)} ml alcohol</li>`).join('')}
+        </ul>
+        ${afvallers.length ? `<h3>❌ Afvallers</h3><ul>${afvallers.map(n => `<li>${n} (afgevallen in ronde ${rondeVanAfval[n]})</li>`).join('')}</ul>` : ''}
+        
+        <h3>📈 Beoordelaarsstatistieken</h3>
+        <ul>
+          ${Object.entries(avgScoreByJudge).map(([name, data]) => `<li>${name}: Gemiddelde score ${ (data.total / data.count).toFixed(2) }</li>`).join('')}
+        </ul>
+        <h3>⏱️ Totale speeltijd</h3>
+        <p>${Math.floor(totalTime / 60)} minuten en ${totalTime % 60} seconden</p>
+        
+        <button onclick="copyResultsToClipboard()">📋 Kopieer Resultaat naar WhatsApp</button>
+        <button onclick="window.print()">🖨️ Print Resultaat</button><br><br>
+        <button onclick="location.reload()">🔁 Opnieuw Spelen</button>
+      `;
+    }
+
+    renderSetup();
+  </script>
+</body>
+</html>
