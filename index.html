@@ -4,87 +4,63 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>High Bieren Spel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f5f7fa;
-      color: #2e3a59;
-      margin: 0;
-      padding: 0;
+    @keyframes slideIn {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
-    .container {
-      max-width: 900px;
-      margin: auto;
-      padding: 2rem;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    .slide-animation {
+      animation: slideIn 0.15s ease-out;
     }
-    h1, h2, h3 {
-      text-align: center;
-      color: #374785;
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
     }
-    .player-row {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-      align-items: center;
+    .pulse-animation {
+      animation: pulse 0.5s ease-in-out infinite;
     }
-    input {
-      padding: 0.5rem;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      flex: 1;
-    }
-    button {
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-      background-color: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    .score-buttons button {
-      margin: 0.2rem;
-      padding: 0.5rem 1rem;
-      background-color: #e0e0e0;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .score-buttons button.selected {
-      background-color: #ff9800;
-      color: white;
-    }
-    .score-buttons button.bounce {
-      transform: scale(1.2);
-    }
-    .dice-animation {
-      font-size: 2rem;
-      animation: shake 1s ease-in-out;
-      text-align: center;
-    }
-    @keyframes shake {
-      0%, 100% { transform: rotate(0deg); }
-      25% { transform: rotate(10deg); }
-      50% { transform: rotate(-10deg); }
-      75% { transform: rotate(10deg); }
-    }
-    @media (max-width: 600px) {
-      .player-row {
-        flex-direction: column;
+    @keyframes glow {
+      0%, 100% { 
+        box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+        transform: scale(1);
       }
+      50% { 
+        box-shadow: 0 0 40px rgba(251, 191, 36, 0.8);
+        transform: scale(1.02);
+      }
+    }
+    .glow-animation {
+      animation: glow 1s ease-in-out infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: -1000px 0; }
+      100% { background-position: 1000px 0; }
+    }
+    .shimmer {
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+      background-size: 1000px 100%;
+      animation: shimmer 2s infinite;
+    }
+    @keyframes sparkle {
+      0%, 100% { opacity: 0; transform: scale(0); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+    .sparkle {
+      animation: sparkle 0.6s ease-in-out;
+    }
+    .bounce-animation {
+      animation: bounce 0.3s;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
     }
   </style>
 </head>
-<body>
-  <div class="container" id="app"></div>
+<body class="bg-gradient-to-br from-amber-50 to-orange-50 min-h-screen">
+  <div class="container mx-auto max-w-5xl p-2 sm:p-4" id="app"></div>
   <script>
     const app = document.getElementById('app');
 
@@ -93,32 +69,98 @@ let state = {
   round: 0,
   currentBeer: null,
   scores: [],
-  startTime: Date.now()
+  startTime: Date.now(),
+  roundHistory: [] // Store state after each round
 };
 
 function renderSetup() {
   app.innerHTML = `
-    <h1>High Bieren</h1>
-    <h2>📜 Spelregels</h2>
-    <ul>
-      <li>Iedere speler neemt één soort bier mee voor elke deelnemer.</li>
-      <li>Per ronde wordt willekeurig één bier gekozen.</li>
-      <li>Iedere speler beoordeelt het gekozen bier met een score van 1 t/m 10.</li>
-      <li>Geen score = afvaller.</li>
-      <li>Na alle rondes worden gemiddelden berekend en winnaars bepaald.</li>
-    </ul>
-    <h2>Spelers</h2>
-    <div id="players">
-      ${state.players.map((p, i) => `
-        <div class="player-row">
-          <input placeholder="Naam" value="${p.name}" oninput="updatePlayer(${i}, 'name', this.value)" />
-          <input placeholder="Bier" value="${p.beer}" oninput="updatePlayer(${i}, 'beer', this.value)" />
-          <button onclick="removePlayer(${i})">🗑</button>
-        </div>
-      `).join('')}
+    <div class="bg-white rounded-2xl shadow-2xl p-4 sm:p-8 mt-4 sm:mt-8">
+      <h1 class="text-3xl sm:text-5xl font-bold text-center text-amber-700 mb-6 sm:mb-8">
+        <i class="fas fa-beer text-amber-600"></i> High Bieren
+      </h1>
+      
+      <div class="bg-amber-50 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+        <h2 class="text-xl sm:text-2xl font-semibold text-amber-800 mb-4">
+          <i class="fas fa-scroll"></i> Spelregels
+        </h2>
+        <ul class="space-y-2 text-sm sm:text-base text-gray-700">
+          <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+            <span>Iedere speler neemt één soort bier mee voor elke deelnemer.</span>
+          </li>
+          <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+            <span>Per ronde wordt willekeurig één bier gekozen.</span>
+          </li>
+          <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+            <span>Iedere speler beoordeelt het gekozen bier met een score van 1 t/m 10.</span>
+          </li>
+          <li class="flex items-start">
+            <i class="fas fa-times-circle text-red-500 mt-1 mr-3"></i>
+            <span>Geen score = afvaller.</span>
+          </li>
+          <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+            <span>Na alle rondes worden gemiddelden berekend en winnaars bepaald.</span>
+          </li>
+        </ul>
+      </div>
+
+      <h2 class="text-2xl sm:text-3xl font-semibold text-gray-800 mb-6">
+        <i class="fas fa-users"></i> Spelers
+      </h2>
+      
+      <div class="space-y-3" id="players">
+        ${state.players.map((p, i) => `
+          <div class="flex flex-col sm:flex-row gap-3 bg-gray-50 p-3 sm:p-4 rounded-lg">
+            <input 
+              placeholder="Naam speler" 
+              value="${p.name}" 
+              oninput="updatePlayer(${i}, 'name', this.value)"
+              class="flex-1 px-3 sm:px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none transition-colors text-sm sm:text-base"
+            />
+            <input 
+              placeholder="Naam bier" 
+              value="${p.beer}" 
+              oninput="updatePlayer(${i}, 'beer', this.value)"
+              class="flex-1 px-3 sm:px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none transition-colors text-sm sm:text-base"
+            />
+            <button 
+              onclick="removePlayer(${i})"
+              class="bg-red-500 hover:bg-red-600 text-white px-3 sm:px-4 py-2 rounded-lg transition-colors self-start sm:self-auto"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        `).join('')}
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6">
+        <button 
+          onclick="addPlayer()"
+          class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 sm:px-6 rounded-lg transition-all transform hover:scale-105 text-sm sm:text-base"
+        >
+          <i class="fas fa-plus-circle"></i> Voeg Speler Toe
+        </button>
+        <button 
+          onclick="startGame()"
+          class="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 sm:px-6 rounded-lg transition-all transform hover:scale-105 text-sm sm:text-base"
+        >
+          <i class="fas fa-play"></i> Start Spel
+        </button>
+      </div>
+      
+      <div class="mt-4 text-center">
+        <button 
+          onclick="fillDemoData()"
+          class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg transition-all transform hover:scale-105 text-sm sm:text-base"
+        >
+          <i class="fas fa-flask"></i> Demo Mode (10 spelers)
+        </button>
+      </div>
     </div>
-    <button onclick="addPlayer()">+ Voeg Speler Toe</button>
-    <button onclick="startGame()">✅ Start Spel</button>
   `;
 }
 
@@ -136,12 +178,67 @@ function removePlayer(i) {
   renderSetup();
 }
 
+function fillDemoData() {
+  const demoPlayers = [
+    { name: 'Jeroen', beer: 'Heineken' },
+    { name: 'Sophie', beer: 'La Chouffe' },
+    { name: 'Max', beer: 'Duvel' },
+    { name: 'Emma', beer: 'Tripel Karmeliet' },
+    { name: 'Lucas', beer: 'Grolsch' },
+    { name: 'Lisa', beer: 'Amstel' },
+    { name: 'Thomas', beer: 'Westmalle Dubbel' },
+    { name: 'Julia', beer: 'Brand' },
+    { name: 'Bram', beer: 'Hertog Jan' },
+    { name: 'Anna', beer: 'Leffe Blond' }
+  ];
+  
+  state.players = demoPlayers.map(p => ({ ...p, eliminated: false }));
+  renderSetup();
+}
+
+function saveRoundHistory() {
+  // Deep clone current state
+  const currentState = {
+    players: JSON.parse(JSON.stringify(state.players)),
+    round: state.round,
+    currentBeer: state.currentBeer ? JSON.parse(JSON.stringify(state.currentBeer)) : null,
+    scores: JSON.parse(JSON.stringify(state.scores))
+  };
+  state.roundHistory.push(currentState);
+}
+
+function goBackOneRound() {
+  if (state.roundHistory.length === 0) return;
+  
+  // Restore previous state
+  const previousState = state.roundHistory.pop();
+  state.players = previousState.players;
+  state.round = previousState.round;
+  state.currentBeer = previousState.currentBeer;
+  state.scores = previousState.scores;
+  
+  // Flag that we're restoring from history
+  window.restoringFromHistory = true;
+  
+  // If we're back to round 0, show setup
+  if (state.round === 0) {
+    renderSetup();
+  } else {
+    renderRound();
+  }
+}
+
 function startGame() {
   if (state.players.length < 2) return alert('Minimaal 2 spelers vereist.');
   if (!state.players.every(p => p.name && p.beer)) return alert('Alle velden moeten ingevuld zijn.');
   state.players.forEach(p => { p.eliminated = false; });
   state.round = 0;
   state.scores = [];
+  state.roundHistory = []; // Reset history
+  
+  // Save initial state
+  saveRoundHistory();
+  
   nextRound();
 }
 
@@ -152,44 +249,296 @@ function nextRound() {
 
   state.round++;
   state.currentBeer = remaining[Math.floor(Math.random() * remaining.length)];
-  renderRound();
+  showLootboxAnimation(remaining);
 }
 
 let selectedScores = {};
 
-function renderRound() {
-  selectedScores = {};
-  const activePlayers = state.players.filter(p => !p.eliminated);
+function showLootboxAnimation(beers) {
   app.innerHTML = `
-    <h2>Ronde ${state.round}</h2>
-    <div class="dice-animation">🎲</div>
-    <h3>${state.currentBeer.beer}</h3>
-    <p>Ingebracht door: ${state.currentBeer.name}</p>
-    <form id="scoreForm">
-      ${activePlayers.map(p => `
-        <div>
-          <strong>${p.name}</strong>
-          <div class="score-buttons" data-player="${p.name}">
-            ${[...Array(10).keys()].map(i => `
-              <button type="button" data-score="${i + 1}">${i + 1}</button>
-            `).join('')}
+    <div class="bg-white rounded-2xl shadow-2xl p-4 sm:p-8 mt-4 sm:mt-8">
+      <h2 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-4 sm:mb-6">
+        Ronde ${state.round}
+      </h2>
+      <div class="text-center">
+        <h3 class="text-lg sm:text-2xl font-semibold text-amber-700 mb-4 sm:mb-6">
+          <i class="fas fa-dice"></i> Willekeurige Selectie
+        </h3>
+        
+        <!-- Lootbox container -->
+        <div class="relative mx-auto max-w-2xl">
+          <!-- Background glow effect -->
+          <div class="absolute inset-0 bg-gradient-to-r from-amber-200 via-yellow-200 to-amber-200 rounded-2xl blur-xl opacity-50"></div>
+          
+          <!-- Main lootbox -->
+          <div class="relative bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl p-4 sm:p-8 border-4 border-amber-300 shadow-2xl">
+            <!-- Decorative corners -->
+            <div class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-amber-500 rounded-tl-xl"></div>
+            <div class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-amber-500 rounded-tr-xl"></div>
+            <div class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-amber-500 rounded-bl-xl"></div>
+            <div class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-amber-500 rounded-br-xl"></div>
+            
+            <!-- Selection window -->
+            <div class="relative h-40 sm:h-48 overflow-hidden bg-gradient-to-br from-amber-700 to-yellow-600 rounded-xl shadow-inner">
+              <div class="absolute inset-0 shimmer pointer-events-none z-10"></div>
+              <div id="beerSlider" class="absolute inset-0 flex items-center justify-center p-4 sm:p-8">
+                <!-- Card will be inserted here -->
+              </div>
+            </div>
+            
+            <!-- Indicator arrows -->
+            <div class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 sm:-translate-x-2">
+              <i class="fas fa-caret-right text-2xl sm:text-4xl text-amber-500"></i>
+            </div>
+            <div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 sm:translate-x-2">
+              <i class="fas fa-caret-left text-2xl sm:text-4xl text-amber-500"></i>
+            </div>
           </div>
         </div>
-      `).join('')}
-      <br><button type="submit">✅ Bevestig Ronde</button>
-    </form>
+        
+        <!-- Loading dots -->
+        <div class="mt-6 flex justify-center gap-2">
+          <div class="w-3 h-3 bg-amber-400 rounded-full animate-pulse"></div>
+          <div class="w-3 h-3 bg-amber-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+          <div class="w-3 h-3 bg-amber-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const slider = document.getElementById('beerSlider');
+  const selectedIndex = beers.indexOf(state.currentBeer);
+  
+  // Create a shuffled array that ensures our selected beer is not at the end
+  let shuffledBeers = [...beers];
+  for (let i = shuffledBeers.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledBeers[i], shuffledBeers[j]] = [shuffledBeers[j], shuffledBeers[i]];
+  }
+  
+  // Create animation sequence with fake-out
+  const animationSequence = [];
+  const totalDuration = 5000; // 5 seconds total
+  const cycles = 30; // Number of cycles through beers
+  let rollSteps = 0; // Will be set later for the fake-out
+  
+  // Regular cycling
+  for (let i = 0; i < cycles; i++) {
+    animationSequence.push(shuffledBeers[i % shuffledBeers.length]);
+  }
+  
+  // Add fake-out sequence
+  // First, find a beer that's not the selected one for the fake-out
+  const fakeOutBeer = beers.find(b => b !== state.currentBeer) || beers[0];
+  animationSequence.push(fakeOutBeer); // Land on fake beer
+  
+  // Now randomly roll forward or backward to the actual beer
+  const fakeOutIndex = beers.indexOf(fakeOutBeer);
+  const targetIndex = beers.indexOf(state.currentBeer);
+  rollSteps = Math.floor(Math.random() * 3) + 2; // Roll 2-4 steps
+  
+  if (Math.random() > 0.5) {
+    // Roll forward - start from the next beer after fake-out
+    for (let i = 1; i <= rollSteps; i++) {
+      const stepIndex = (fakeOutIndex + i) % beers.length;
+      animationSequence.push(beers[stepIndex]);
+    }
+  } else {
+    // Roll backward - start from the previous beer before fake-out
+    for (let i = 1; i <= rollSteps; i++) {
+      const stepIndex = (fakeOutIndex - i + beers.length) % beers.length;
+      animationSequence.push(beers[stepIndex]);
+    }
+  }
+  
+  // Final push to ensure we end on the correct beer
+  animationSequence.push(state.currentBeer);
+  
+  let currentStep = 0;
+  const animationSpeed = totalDuration / animationSequence.length;
+  
+  function animate() {
+    if (currentStep < animationSequence.length) {
+      const currentBeer = animationSequence[currentStep];
+      const isNearEnd = currentStep >= animationSequence.length - 3;
+      const isFinal = currentStep === animationSequence.length - 1;
+      
+      slider.innerHTML = `
+        <div class="w-full h-full flex items-center justify-center slide-animation">
+          <div class="relative w-48 sm:w-64 h-24 sm:h-32 ${isNearEnd ? 'pulse-animation' : ''}">
+            <!-- Beer card -->
+            <div class="absolute inset-0 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg border-2 border-amber-400 shadow-lg transform ${isFinal ? 'scale-105' : ''}">
+              <!-- Beer icon background -->
+              <div class="absolute top-1 sm:top-2 right-1 sm:right-2 opacity-20">
+                <i class="fas fa-beer text-2xl sm:text-4xl text-amber-600"></i>
+              </div>
+              
+              <!-- Content -->
+              <div class="relative h-full flex flex-col justify-center items-center p-2 sm:p-4">
+                <h3 class="text-lg sm:text-2xl font-bold text-amber-800 text-center mb-1">
+                  ${currentBeer.beer}
+                </h3>
+                <p class="text-xs sm:text-sm text-gray-600 flex items-center gap-1">
+                  <i class="fas fa-user-circle text-xs"></i>
+                  <span>${currentBeer.name}</span>
+                </p>
+              </div>
+              
+              ${isFinal ? `
+                <!-- Final selection indicator -->
+                <div class="absolute -top-3 -right-3 bg-yellow-400 rounded-full p-2 shadow-lg">
+                  <i class="fas fa-star text-white"></i>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      currentStep++;
+      
+      // Slow down at the end for dramatic effect
+      let delay = animationSpeed;
+      if (currentStep === animationSequence.length - rollSteps - 1) {
+        // Big pause on the fake-out beer
+        delay = animationSpeed * 8;
+      } else if (currentStep > animationSequence.length - rollSteps - 1) {
+        // Slower rolling after fake-out
+        delay = animationSpeed * 3;
+      }
+      setTimeout(animate, delay);
+    } else {
+      // Show final selection with glow effect
+      setTimeout(() => {
+        slider.innerHTML = `
+          <div class="w-full h-full flex items-center justify-center">
+            <div class="relative w-48 sm:w-64 h-24 sm:h-32 glow-animation">
+              <!-- Beer card -->
+              <div class="absolute inset-0 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-lg border-3 border-yellow-400 shadow-2xl transform scale-110">
+                <!-- Beer icon background -->
+                <div class="absolute top-1 sm:top-2 right-1 sm:right-2 opacity-20">
+                  <i class="fas fa-beer text-2xl sm:text-4xl text-amber-600"></i>
+                </div>
+                
+                <!-- Content -->
+                <div class="relative h-full flex flex-col justify-center items-center p-2 sm:p-4">
+                  <h3 class="text-lg sm:text-2xl font-bold text-amber-800 text-center mb-1">
+                    ${state.currentBeer.beer}
+                  </h3>
+                  <p class="text-xs sm:text-sm text-gray-600 flex items-center gap-1">
+                    <i class="fas fa-user-circle text-xs"></i>
+                    <span>${state.currentBeer.name}</span>
+                  </p>
+                </div>
+                
+                <!-- Winner badge -->
+                <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full px-4 py-1 shadow-lg">
+                  <span class="text-white font-bold text-sm">SELECTED!</span>
+                </div>
+                
+                <!-- Trophy -->
+                <div class="absolute -bottom-3 -right-3 bg-yellow-400 rounded-full p-2 shadow-lg sparkle">
+                  <i class="fas fa-trophy text-white text-lg"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        setTimeout(() => renderRound(), 2000);
+      }, 500);
+    }
+  }
+  
+  animate();
+}
+
+function renderRound() {
+  // Only reset selectedScores if we're coming from a new round, not from going back
+  if (!window.restoringFromHistory) {
+    selectedScores = {};
+  }
+  window.restoringFromHistory = false;
+  
+  const activePlayers = state.players.filter(p => !p.eliminated);
+  const remainingBeers = state.players.filter(p => !state.scores.some(s => s.beer === p.beer)).length - 1;
+  
+  app.innerHTML = `
+    <div class="bg-white rounded-2xl shadow-2xl p-4 sm:p-8 mt-4 sm:mt-8">
+      <div class="flex justify-between items-center mb-4">
+        ${state.roundHistory.length > 0 ? `
+        <button 
+          onclick="goBackOneRound()"
+          class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-3 sm:px-4 rounded-lg transition-all text-sm sm:text-base"
+        >
+          <i class="fas fa-arrow-left"></i> Terug
+        </button>
+        ` : '<div></div>'}
+        <div class="text-center flex-1">
+          <h2 class="text-2xl sm:text-3xl font-bold text-gray-800">
+            Ronde ${state.round}
+          </h2>
+          <p class="text-gray-600 text-sm sm:text-base">
+            <i class="fas fa-beer"></i> Nog ${remainingBeers} ${remainingBeers === 1 ? 'ronde' : 'rondes'} te gaan
+          </p>
+        </div>
+        <div></div>
+      </div>
+      
+      <div class="text-center mb-6 sm:mb-8">
+        <div class="bg-amber-100 rounded-xl p-4 sm:p-6 inline-block">
+          <h3 class="text-2xl sm:text-4xl font-bold text-amber-700 mb-2">${state.currentBeer.beer}</h3>
+          <p class="text-gray-600 text-sm sm:text-base">
+            <i class="fas fa-user"></i> Ingebracht door: <span class="font-semibold">${state.currentBeer.name}</span>
+          </p>
+        </div>
+      </div>
+
+      <form id="scoreForm" class="space-y-4 sm:space-y-6">
+        ${activePlayers.map(p => `
+          <div class="bg-gray-50 rounded-xl p-4 sm:p-6">
+            <h4 class="text-lg sm:text-xl font-semibold text-gray-800 mb-3">
+              <i class="fas fa-user-circle text-blue-500"></i> ${p.name}
+            </h4>
+            <div class="score-buttons grid grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-2" data-player="${p.name}">
+              ${[...Array(10).keys()].map(i => `
+                <button 
+                  type="button" 
+                  data-score="${i + 1}"
+                  class="score-btn bg-white border-2 border-gray-300 hover:border-amber-500 text-gray-700 font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg transition-all transform hover:scale-110 text-sm sm:text-base"
+                >
+                  ${i + 1}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `).join('')}
+        
+        <button 
+          type="submit"
+          class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-lg text-lg sm:text-xl transition-all transform hover:scale-105"
+        >
+          <i class="fas fa-check-circle"></i> Bevestig Ronde
+        </button>
+      </form>
+    </div>
   `;
 
   document.querySelectorAll('.score-buttons').forEach(group => {
     group.addEventListener('click', function(e) {
-      if (e.target.tagName === 'BUTTON') {
+      if (e.target.classList.contains('score-btn')) {
         const score = parseInt(e.target.dataset.score);
         const player = group.dataset.player.trim().toLowerCase();
         selectedScores[player] = score;
-        group.querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
-        e.target.classList.add('selected');
-        e.target.classList.add('bounce');
-        setTimeout(() => e.target.classList.remove('bounce'), 300);
+        
+        group.querySelectorAll('button').forEach(btn => {
+          btn.classList.remove('bg-amber-500', 'text-white', 'border-amber-600');
+          btn.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
+        });
+        
+        e.target.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
+        e.target.classList.add('bg-amber-500', 'text-white', 'border-amber-600', 'bounce-animation');
+        
+        setTimeout(() => e.target.classList.remove('bounce-animation'), 300);
       }
     });
   });
@@ -201,6 +550,9 @@ function renderRound() {
 }
 
 function confirmRound() {
+  // Save current state before making changes
+  saveRoundHistory();
+  
   const round = {
     beer: state.currentBeer.beer,
     owner: state.currentBeer.name,
@@ -219,7 +571,14 @@ function confirmRound() {
   }
 
   state.scores.push(round);
-  nextRound();
+  
+  // Check if all players are eliminated
+  const activePlayers = state.players.filter(p => !p.eliminated);
+  if (activePlayers.length === 0) {
+    renderResults();
+  } else {
+    nextRound();
+  }
 }
 
 function renderResults() {
@@ -249,68 +608,233 @@ function renderResults() {
   const avg = Object.entries(allScores).map(([beer, scores]) => {
     const owner = state.players.find(p => p.beer === beer).name;
     const average = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2);
-    return { beer, average, owner };
+    return { beer, average: parseFloat(average), owner };
   }).sort((a, b) => b.average - a.average);
 
+  // Find unrated/missed beers
+  const ratedBeers = state.scores.map(r => r.beer);
+  const unratedBeers = state.players.filter(p => !ratedBeers.includes(p.beer));
+  
+  // Find beers that had rounds but got no scores (everyone eliminated)
+  const beersWithNoScores = state.scores.filter(round => round.scores.length === 0).map(r => ({
+    name: r.owner,
+    beer: r.beer
+  }));
+  
+  // Combine both types of missed beers
+  const allMissedBeers = [...unratedBeers, ...beersWithNoScores];
+
   const volhouders = state.players.filter(p => !p.eliminated);
-  const earliestRound = Math.min(...Object.values(rondeVanAfval));
+  const earliestRound = Object.values(rondeVanAfval).length > 0 ? Math.min(...Object.values(rondeVanAfval)) : 1;
   const laffeBorrelaars = afvallers.filter(name => rondeVanAfval[name] === earliestRound);
   const lafste = laffeBorrelaars.length ? laffeBorrelaars : null;
 
-  const bestBeer = avg[0];
-  const worstBeer = avg[avg.length - 1];
-
-  const cards = `
-    <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-bottom: 2rem;">
-      <div style="flex:1; min-width: 250px; background:#e8f5e9; padding:1rem; border-radius:10px; text-align:center;">
-        <h3>🏆 Beste Bier</h3>
-        <p><strong>${bestBeer.beer}</strong><br/>Gemiddelde score: ${bestBeer.average}<br/>Door: ${bestBeer.owner}</p>
-      </div>
-      <div style="flex:1; min-width: 250px; background:#ffebee; padding:1rem; border-radius:10px; text-align:center;">
-        <h3>💀 Slechtste Bier</h3>
-        <p><strong>${worstBeer.beer}</strong><br/>Gemiddelde score: ${worstBeer.average}<br/>Door: ${worstBeer.owner}</p>
-      </div>
-      <div style="flex:1; min-width: 250px; background:#e3f2fd; padding:1rem; border-radius:10px; text-align:center;">
-        <h3>💪 Volhouders</h3>
-        <p>${volhouders.length > 0 ? volhouders.map(p => p.name).join(', ') : 'Geen'}</p>
-      </div>
-      ${lafste ? `
-      <div style="flex:1; min-width: 250px; background:#fbe9e7; padding:1rem; border-radius:10px; text-align:center;">
-        <h3>😵 Lafste Borrelaar(s)</h3>
-        ${lafste.map(n => `<p>${n} (ronde ${rondeVanAfval[n]})</p>`).join('')}
-      </div>` : ''}
-    </div>
-  `;
-
-  const fullRanking = `
-    <h3>📊 Volledige Bier Ranking</h3>
-    <ol>
-      ${avg.map((b, i) => `<li><strong>#${i + 1}</strong> - ${b.beer} (${b.average}) door ${b.owner}</li>`).join('')}
-    </ol>
-  `;
-
-  const judgeDetails = `
-    <h3>📈 Gedetailleerde Beoordelaarsstatistieken</h3>
-    <ul style="columns: 2; -webkit-columns: 2; -moz-columns: 2;">
-      ${Object.entries(avgScoreByJudge).map(([name, data]) => `
-        <li style="margin-bottom:1rem;"><strong>${name}</strong>: Gemiddelde ${ (data.total / data.count).toFixed(2) }
-          <ul>
-            ${data.given.map(g => `<li>${g.beer}: ${g.score}</li>`).join('')}
-          </ul>
-        </li>
-      `).join('')}
-    </ul>
-  `;
+  const bestBeer = avg.length > 0 ? avg[0] : null;
+  const worstBeer = avg.length > 0 ? avg[avg.length - 1] : null;
 
   app.innerHTML = `
-    <h1 style="text-align:center">🏁 Eindresultaat</h1>
-    ${cards}
-    ${fullRanking}
-    ${judgeDetails}
-    <h3>⏱️ Totale speeltijd</h3>
-    <p>${Math.floor(totalTime / 60)} minuten en ${totalTime % 60} seconden</p>
-    <div style="text-align:center; margin-top:2rem">
-      <button onclick="location.reload()">🔁 Opnieuw Spelen</button>
+    <div class="bg-white rounded-2xl shadow-2xl p-4 sm:p-8 mt-4 sm:mt-8">
+      <div class="flex justify-between items-center mb-6 sm:mb-8">
+        ${state.roundHistory.length > 0 ? `
+        <button 
+          onclick="goBackOneRound()"
+          class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-3 sm:px-4 rounded-lg transition-all text-sm sm:text-base"
+        >
+          <i class="fas fa-arrow-left"></i> Terug
+        </button>
+        ` : '<div></div>'}
+        <h1 class="text-3xl sm:text-5xl font-bold text-center text-amber-700 flex-1">
+          <i class="fas fa-flag-checkered"></i> Eindresultaat
+        </h1>
+        <div></div>
+      </div>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        ${bestBeer ? `
+        <div class="bg-gradient-to-br from-green-400 to-green-600 text-white rounded-xl p-4 sm:p-6 text-center transform hover:scale-105 transition-transform">
+          <i class="fas fa-trophy text-3xl sm:text-5xl mb-2 sm:mb-3"></i>
+          <h3 class="text-lg sm:text-xl font-bold mb-2">Beste Bier</h3>
+          <p class="text-lg sm:text-2xl font-bold">${bestBeer.beer}</p>
+          <p class="text-sm sm:text-lg">Score: ${bestBeer.average}</p>
+          <p class="text-xs sm:text-sm opacity-90">Door: ${bestBeer.owner}</p>
+        </div>
+        ` : ''}
+        
+        ${worstBeer ? `
+        <div class="bg-gradient-to-br from-red-400 to-red-600 text-white rounded-xl p-4 sm:p-6 text-center transform hover:scale-105 transition-transform">
+          <i class="fas fa-skull text-3xl sm:text-5xl mb-2 sm:mb-3"></i>
+          <h3 class="text-lg sm:text-xl font-bold mb-2">Slechtste Bier</h3>
+          <p class="text-lg sm:text-2xl font-bold">${worstBeer.beer}</p>
+          <p class="text-sm sm:text-lg">Score: ${worstBeer.average}</p>
+          <p class="text-xs sm:text-sm opacity-90">Door: ${worstBeer.owner}</p>
+        </div>
+        ` : ''}
+        
+        ${volhouders.length > 0 ? `
+        <div class="bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-xl p-4 sm:p-6 text-center transform hover:scale-105 transition-transform">
+          <i class="fas fa-fist-raised text-3xl sm:text-5xl mb-2 sm:mb-3"></i>
+          <h3 class="text-lg sm:text-xl font-bold mb-2">Volhouders</h3>
+          <div class="mt-3">
+            <div class="grid grid-cols-1 gap-2">
+              ${volhouders.map(p => `
+                <div class="bg-white/20 rounded-lg px-3 py-1">
+                  <span class="text-sm font-medium">${p.name}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          <p class="text-sm opacity-90 mt-2">Totaal: ${volhouders.length} speler(s)</p>
+        </div>
+        ` : ''}
+        
+        ${lafste ? `
+        <div class="bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-xl p-6 text-center transform hover:scale-105 transition-transform">
+          <i class="fas fa-dizzy text-5xl mb-3"></i>
+          <h3 class="text-xl font-bold mb-2">Lafste Borrelaar(s)</h3>
+          <div class="mt-3">
+            <div class="grid grid-cols-1 gap-2">
+              ${lafste.map(n => `
+                <div class="bg-white/20 rounded-lg px-3 py-2">
+                  <span class="text-sm font-medium">${n}</span>
+                  <span class="text-xs opacity-80 ml-2">(Ronde ${rondeVanAfval[n]})</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          <p class="text-sm opacity-90 mt-2">Totaal: ${lafste.length} speler(s)</p>
+        </div>` : ''}
+      </div>
+
+      ${avg.length > 0 ? `
+      <div class="bg-amber-50 rounded-xl p-6 mb-8">
+        <h3 class="text-2xl font-bold text-amber-800 mb-4">
+          <i class="fas fa-list-ol"></i> Volledige Bier Ranking
+        </h3>
+        <div class="space-y-3">
+          ${avg.map((b, i) => {
+            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
+            const bgColor = i === 0 ? 'bg-gradient-to-r from-yellow-100 to-yellow-200' : 
+                           i === 1 ? 'bg-gradient-to-r from-gray-100 to-gray-200' : 
+                           i === 2 ? 'bg-gradient-to-r from-orange-100 to-orange-200' : 'bg-white';
+            return `
+              <div class="${bgColor} rounded-lg p-4 flex items-center justify-between border-2 border-gray-200">
+                <div class="flex items-center gap-4">
+                  <span class="text-2xl font-bold">${medal}</span>
+                  <div>
+                    <p class="text-lg font-semibold">${b.beer}</p>
+                    <p class="text-sm text-gray-600">Door: ${b.owner}</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <p class="text-2xl font-bold text-amber-600">${b.average}</p>
+                  <p class="text-sm text-gray-600">gemiddeld</p>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+      ` : ''}
+
+      <div class="bg-green-50 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+        <h3 class="text-xl sm:text-2xl font-bold text-green-800 mb-4">
+          <i class="fas fa-users"></i> Alle Deelnemers
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          ${state.players.map(p => `
+            <div class="bg-white rounded-lg p-3 sm:p-4 border-2 border-green-200 flex items-center gap-3">
+              <i class="fas fa-user-circle text-2xl text-green-600"></i>
+              <div class="flex-1">
+                <p class="font-semibold text-green-800 text-sm sm:text-base">${p.name}</p>
+                <p class="text-xs sm:text-sm text-gray-600 flex items-center gap-1">
+                  <i class="fas fa-beer text-amber-600"></i>
+                  ${p.beer}
+                </p>
+              </div>
+              ${p.eliminated ? `
+                <div class="text-red-500">
+                  <i class="fas fa-times-circle" title="Afgevallen"></i>
+                </div>
+              ` : `
+                <div class="text-green-500">
+                  <i class="fas fa-check-circle" title="Volgehouden"></i>
+                </div>
+              `}
+            </div>
+          `).join('')}
+        </div>
+        <p class="text-center text-gray-600 mt-4 text-sm sm:text-base">
+          Totaal: ${state.players.length} deelnemers
+        </p>
+      </div>
+
+      ${Object.keys(avgScoreByJudge).length > 0 ? `
+      <div class="bg-blue-50 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+        <h3 class="text-xl sm:text-2xl font-bold text-blue-800 mb-4">
+          <i class="fas fa-chart-bar"></i> Beoordelaarsstatistieken
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          ${Object.entries(avgScoreByJudge).map(([name, data]) => {
+            const avgScore = (data.total / data.count).toFixed(2);
+            return `
+              <div class="bg-white rounded-lg p-4 border-2 border-blue-200">
+                <h4 class="text-lg font-semibold text-blue-700 mb-2">
+                  <i class="fas fa-user"></i> ${name}
+                </h4>
+                <p class="text-sm text-gray-600 mb-3">Gemiddelde score gegeven: <span class="font-bold text-blue-600 text-lg">${avgScore}</span></p>
+                <div class="space-y-1">
+                  ${data.given.map(g => `
+                    <div class="flex justify-between text-sm">
+                      <span class="text-gray-600">${g.beer}:</span>
+                      <span class="font-semibold">${g.score}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+      ` : ''}
+
+      ${allMissedBeers.length > 0 ? `
+      <div class="bg-gray-50 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+        <h3 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">
+          <i class="fas fa-question-circle"></i> Gemiste Bieren
+        </h3>
+        <p class="text-gray-600 mb-4 text-sm sm:text-base">Deze bieren zijn niet beoordeeld omdat iedereen al was afgevallen of niet aan bod gekomen:</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          ${allMissedBeers.map(p => `
+            <div class="bg-white rounded-lg p-3 sm:p-4 border-2 border-gray-300 border-dashed">
+              <div class="flex items-center gap-3">
+                <i class="fas fa-beer text-2xl sm:text-3xl text-gray-400"></i>
+                <div class="flex-1">
+                  <p class="font-semibold text-gray-700 text-sm sm:text-base">${p.beer}</p>
+                  <p class="text-xs sm:text-sm text-gray-500">Door: ${p.name}</p>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <p class="text-center text-gray-600 mt-4 text-sm sm:text-base">
+          Totaal: ${allMissedBeers.length} gemiste ${allMissedBeers.length === 1 ? 'bier' : 'bieren'}
+        </p>
+      </div>
+      ` : ''}
+
+      <div class="text-center mb-8">
+        <p class="text-lg text-gray-600">
+          <i class="fas fa-clock"></i> Totale speeltijd: 
+          <span class="font-bold">${Math.floor(totalTime / 60)} minuten en ${totalTime % 60} seconden</span>
+        </p>
+      </div>
+
+      <button 
+        onclick="location.reload()"
+        class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
+      >
+        <i class="fas fa-redo"></i> Opnieuw Spelen
+      </button>
     </div>
   `;
 }
