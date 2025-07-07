@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>High Bieren Spel</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     @keyframes slideIn {
@@ -57,9 +62,175 @@
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.2); }
     }
+    
+    /* Settings menu styles */
+    .settings-menu {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+    
+    .settings-toggle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .settings-panel {
+      position: absolute;
+      top: 60px;
+      right: 0;
+      width: 280px;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .settings-panel.open {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* Dark mode slider */
+    .dark-mode-slider {
+      position: relative;
+      width: 60px;
+      height: 30px;
+      background: #cbd5e1;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    
+    .dark-mode-slider.active {
+      background: #3b82f6;
+    }
+    
+    .dark-mode-slider::before {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .dark-mode-slider.active::before {
+      transform: translateX(30px);
+    }
+    
+    /* Continue button animations */
+    @keyframes buttonAppear {
+      0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.3) rotateX(90deg);
+      }
+      50% {
+        opacity: 1;
+        transform: translateY(-5px) scale(1.1) rotateX(-10deg);
+      }
+      70% {
+        transform: translateY(3px) scale(0.95) rotateX(5deg);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotateX(0deg);
+      }
+    }
+    
+    @keyframes buttonFloat {
+      0%, 100% {
+        transform: translateY(0px) scale(1);
+      }
+      25% {
+        transform: translateY(-3px) scale(1.02);
+      }
+      75% {
+        transform: translateY(3px) scale(0.98);
+      }
+    }
+    
+    @keyframes pulseGlow {
+      0%, 100% {
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.1);
+      }
+      50% {
+        box-shadow: 0 4px 30px rgba(34, 197, 94, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.2);
+      }
+    }
+    
+    .button-appear {
+      animation: buttonAppear 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    }
+    
+    .button-animated {
+      animation: buttonFloat 3s ease-in-out infinite, pulseGlow 2s ease-in-out infinite;
+    }
+    
+    @keyframes slideCardLeft {
+      from {
+        transform: translateX(0);
+      }
+      to {
+        transform: translateX(-60px);
+      }
+    }
+    
+    .card-slide-left {
+      animation: slideCardLeft 0.6s ease-out forwards;
+    }
+    
   </style>
 </head>
-<body class="bg-gradient-to-br from-amber-50 to-orange-50 min-h-screen">
+<body class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-900 dark:to-gray-800 min-h-screen transition-colors duration-300">
+  <!-- Always visible settings menu -->
+  <div class="settings-menu">
+    <div class="settings-toggle bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700" onclick="toggleSettingsPanel()">
+      <i class="fas fa-cog text-gray-600 dark:text-gray-400"></i>
+    </div>
+    <div class="settings-panel bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700" id="settingsPanel">
+      <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+        <i class="fas fa-cog mr-2"></i>Instellingen
+      </h3>
+      
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-moon text-gray-600 dark:text-gray-400"></i>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Dark Mode</span>
+          </div>
+          <div class="dark-mode-slider" id="darkModeSlider" onclick="toggleDarkMode()">
+          </div>
+        </div>
+        
+        <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Thema</span>
+          </div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">
+            ${state.darkMode ? 'Donker thema actief' : 'Licht thema actief'}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <div class="container mx-auto max-w-5xl p-2 sm:p-4" id="app"></div>
   <script>
     const app = document.getElementById('app');
@@ -70,21 +241,22 @@ let state = {
   currentBeer: null,
   scores: [],
   startTime: Date.now(),
-  roundHistory: [] // Store state after each round
+  roundHistory: [], // Store state after each round
+  darkMode: localStorage.getItem('darkMode') === 'true' || false
 };
 
 function renderSetup() {
   app.innerHTML = `
-    <div class="bg-white rounded-2xl shadow-2xl p-4 sm:p-8 mt-4 sm:mt-8">
-      <h1 class="text-3xl sm:text-5xl font-bold text-center text-amber-700 mb-6 sm:mb-8">
-        <i class="fas fa-beer text-amber-600"></i> High Bieren
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-8 mt-4 sm:mt-8 relative">
+      <h1 class="text-3xl sm:text-5xl font-bold text-center text-amber-700 dark:text-amber-400 mb-6 sm:mb-8">
+        <i class="fas fa-beer text-amber-600 dark:text-amber-400"></i> High Bieren
       </h1>
       
-      <div class="bg-amber-50 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
-        <h2 class="text-xl sm:text-2xl font-semibold text-amber-800 mb-4">
+      <div class="bg-amber-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+        <h2 class="text-xl sm:text-2xl font-semibold text-amber-800 dark:text-amber-400 mb-4">
           <i class="fas fa-scroll"></i> Spelregels
         </h2>
-        <ul class="space-y-2 text-sm sm:text-base text-gray-700">
+        <ul class="space-y-2 text-sm sm:text-base text-gray-700 dark:text-gray-300">
           <li class="flex items-start">
             <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
             <span>Iedere speler neemt één soort bier mee voor elke deelnemer.</span>
@@ -108,24 +280,24 @@ function renderSetup() {
         </ul>
       </div>
 
-      <h2 class="text-2xl sm:text-3xl font-semibold text-gray-800 mb-6">
+      <h2 class="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-gray-200 mb-6">
         <i class="fas fa-users"></i> Spelers
       </h2>
       
       <div class="space-y-3" id="players">
         ${state.players.map((p, i) => `
-          <div class="flex flex-col sm:flex-row gap-3 bg-gray-50 p-3 sm:p-4 rounded-lg">
+          <div class="flex flex-col sm:flex-row gap-3 bg-gray-50 dark:bg-gray-700 p-3 sm:p-4 rounded-lg">
             <input 
               placeholder="Naam speler" 
               value="${p.name}" 
               oninput="updatePlayer(${i}, 'name', this.value)"
-              class="flex-1 px-3 sm:px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none transition-colors text-sm sm:text-base"
+              class="flex-1 px-3 sm:px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-amber-500 focus:outline-none transition-colors text-sm sm:text-base dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-400"
             />
             <input 
               placeholder="Naam bier" 
               value="${p.beer}" 
               oninput="updatePlayer(${i}, 'beer', this.value)"
-              class="flex-1 px-3 sm:px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none transition-colors text-sm sm:text-base"
+              class="flex-1 px-3 sm:px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-amber-500 focus:outline-none transition-colors text-sm sm:text-base dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-400"
             />
             <button 
               onclick="removePlayer(${i})"
@@ -203,7 +375,8 @@ function saveRoundHistory() {
     round: state.round,
     currentBeer: state.currentBeer ? JSON.parse(JSON.stringify(state.currentBeer)) : null,
     scores: JSON.parse(JSON.stringify(state.scores)),
-    selectedScores: JSON.parse(JSON.stringify(selectedScores))
+    selectedScores: JSON.parse(JSON.stringify(selectedScores)),
+    timestamp: Date.now() // Add timestamp for round duration calculation
   };
   state.roundHistory.push(currentState);
 }
@@ -258,30 +431,52 @@ let selectedScores = {};
 
 function showLootboxAnimation(beers) {
   const activePlayers = state.players.filter(p => !p.eliminated);
+  const totalRounds = state.players.length;
+  const completedRounds = state.scores.length;
+  const progressPercentage = (completedRounds / totalRounds) * 100;
   
   app.innerHTML = `
-    <div class="bg-white rounded-2xl shadow-2xl p-4 sm:p-8 mt-4 sm:mt-8">
-      <h2 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-4 sm:mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-8 mt-4 sm:mt-8">
+      <h2 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 dark:text-gray-200 mb-4 sm:mb-6">
         Ronde ${state.round}
       </h2>
       
+      <!-- Progress Bar -->
+      <div class="mb-6">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">Voortgang</span>
+          <span class="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">${completedRounds}/${totalRounds} rondes</span>
+        </div>
+        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3 sm:h-4">
+          <div class="bg-gradient-to-r from-amber-400 to-orange-500 h-3 sm:h-4 rounded-full transition-all duration-500 ease-out" style="width: ${progressPercentage}%"></div>
+        </div>
+        <div class="flex justify-between mt-2">
+          ${Array.from({length: totalRounds}, (_, i) => `
+            <div class="flex flex-col items-center">
+              <div class="w-3 h-3 sm:w-4 sm:h-4 rounded-full ${i < completedRounds ? 'bg-green-500' : i === completedRounds ? 'bg-amber-500 pulse-animation' : 'bg-gray-300 dark:bg-gray-600'}"></div>
+              <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">${i + 1}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      
       <div class="text-center">
-        <h3 class="text-lg sm:text-2xl font-semibold text-amber-700 mb-4 sm:mb-6">
+        <h3 class="text-lg sm:text-2xl font-semibold text-amber-700 dark:text-amber-400 mb-4 sm:mb-6">
           <i class="fas fa-dice"></i> Willekeurige Selectie
         </h3>
         
         <!-- Lootbox container -->
         <div class="relative mx-auto max-w-2xl">
           <!-- Background glow effect -->
-          <div class="absolute inset-0 bg-gradient-to-r from-amber-200 via-yellow-200 to-amber-200 rounded-2xl blur-xl opacity-50"></div>
+          <div class="absolute inset-0 bg-gradient-to-r from-amber-200 via-yellow-200 to-amber-200 dark:from-amber-600 dark:via-yellow-600 dark:to-amber-600 rounded-2xl blur-xl opacity-50"></div>
           
           <!-- Main lootbox -->
-          <div class="relative bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl p-4 sm:p-8 border-4 border-amber-300 shadow-2xl">
+          <div class="relative bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900 dark:to-orange-900 rounded-2xl p-4 sm:p-8 border-4 border-amber-300 dark:border-amber-600 shadow-2xl">
             <!-- Decorative corners -->
-            <div class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-amber-500 rounded-tl-xl"></div>
-            <div class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-amber-500 rounded-tr-xl"></div>
-            <div class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-amber-500 rounded-bl-xl"></div>
-            <div class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-amber-500 rounded-br-xl"></div>
+            <div class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-amber-500 dark:border-amber-400 rounded-tl-xl"></div>
+            <div class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-amber-500 dark:border-amber-400 rounded-tr-xl"></div>
+            <div class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-amber-500 dark:border-amber-400 rounded-bl-xl"></div>
+            <div class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-amber-500 dark:border-amber-400 rounded-br-xl"></div>
             
             <!-- Selection window -->
             <div class="relative h-40 sm:h-48 overflow-hidden bg-gradient-to-br from-amber-700 to-yellow-600 rounded-xl shadow-inner">
@@ -293,10 +488,10 @@ function showLootboxAnimation(beers) {
             
             <!-- Indicator arrows -->
             <div class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 sm:-translate-x-2">
-              <i class="fas fa-caret-right text-2xl sm:text-4xl text-amber-500"></i>
+              <i class="fas fa-caret-right text-2xl sm:text-4xl text-amber-500 dark:text-amber-400"></i>
             </div>
             <div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 sm:translate-x-2">
-              <i class="fas fa-caret-left text-2xl sm:text-4xl text-amber-500"></i>
+              <i class="fas fa-caret-left text-2xl sm:text-4xl text-amber-500 dark:text-amber-400"></i>
             </div>
           </div>
         </div>
@@ -310,19 +505,19 @@ function showLootboxAnimation(beers) {
       </div>
       
       <!-- Active Players Section -->
-      <div class="bg-blue-50 rounded-xl p-4 sm:p-6 mt-6">
-        <h3 class="text-lg sm:text-xl font-semibold text-blue-800 mb-3 text-center">
+      <div class="bg-blue-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6 mt-6">
+        <h3 class="text-lg sm:text-xl font-semibold text-blue-800 dark:text-blue-400 mb-3 text-center">
           <i class="fas fa-users"></i> Actieve Spelers Deze Ronde
         </h3>
         <div class="flex flex-wrap justify-center gap-2 sm:gap-3">
           ${activePlayers.map(p => `
-            <div class="bg-white rounded-lg px-3 py-2 border-2 border-blue-200 flex items-center gap-2">
-              <i class="fas fa-user-circle text-blue-600"></i>
-              <span class="text-sm sm:text-base font-medium text-blue-800">${p.name}</span>
+            <div class="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 border-2 border-blue-200 dark:border-blue-600 flex items-center gap-2">
+              <i class="fas fa-user-circle text-blue-600 dark:text-blue-400"></i>
+              <span class="text-sm sm:text-base font-medium text-blue-800 dark:text-blue-400">${p.name}</span>
             </div>
           `).join('')}
         </div>
-        <p class="text-center text-blue-600 mt-3 text-sm sm:text-base">
+        <p class="text-center text-blue-600 dark:text-blue-400 mt-3 text-sm sm:text-base">
           ${activePlayers.length} ${activePlayers.length === 1 ? 'speler doet' : 'spelers doen'} mee
         </p>
       </div>
@@ -467,12 +662,52 @@ function showLootboxAnimation(beers) {
             </div>
           </div>
         `;
-        setTimeout(() => renderRound(), 2000);
+        
+        // Show continue button inside the selection window
+        setTimeout(() => {
+          const selectionWindow = document.querySelector('.relative.h-40.sm\\:h-48.overflow-hidden');
+          if (selectionWindow) {
+            // First, slide the beer card to the left
+            const beerCard = document.querySelector('#beerSlider > div');
+            if (beerCard) {
+              beerCard.classList.add('card-slide-left');
+            }
+            
+            // Create button container positioned to the right
+            const buttonContainer = document.createElement('div');
+            buttonContainer.id = 'continueButtonContainer';
+            buttonContainer.className = 'absolute inset-0 flex items-center justify-end pr-8 z-20 pointer-events-none';
+            buttonContainer.innerHTML = `
+              <button 
+                onclick="proceedToRating()" 
+                class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-xl text-lg transition-all transform hover:scale-110 shadow-lg button-appear pointer-events-auto"
+              >
+                Start <i class="fas fa-arrow-right ml-2"></i>
+              </button>
+            `;
+            
+            // Add button to selection window
+            selectionWindow.appendChild(buttonContainer);
+            
+            // After initial animation, add floating effects
+            setTimeout(() => {
+              const button = buttonContainer.querySelector('button');
+              if (button) {
+                button.classList.remove('button-appear');
+                button.classList.add('button-animated');
+              }
+            }, 800);
+          }
+        }, 800);
       }, 500);
     }
   }
   
   animate();
+}
+
+function proceedToRating() {
+  renderRound();
 }
 
 function renderRound() {
@@ -484,9 +719,12 @@ function renderRound() {
   
   const activePlayers = state.players.filter(p => !p.eliminated);
   const remainingBeers = state.players.filter(p => !state.scores.some(s => s.beer === p.beer)).length - 1;
+  const totalRounds = state.players.length;
+  const completedRounds = state.scores.length;
+  const progressPercentage = (completedRounds / totalRounds) * 100;
   
   app.innerHTML = `
-    <div class="bg-white rounded-2xl shadow-2xl p-4 sm:p-8 mt-4 sm:mt-8">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-8 mt-4 sm:mt-8">
       <div class="flex justify-between items-center mb-4">
         ${state.roundHistory.length > 0 ? `
         <button 
@@ -497,20 +735,39 @@ function renderRound() {
         </button>
         ` : '<div></div>'}
         <div class="text-center flex-1">
-          <h2 class="text-2xl sm:text-3xl font-bold text-gray-800">
+          <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-200">
             Ronde ${state.round}
           </h2>
-          <p class="text-gray-600 text-sm sm:text-base">
+          <p class="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
             <i class="fas fa-beer"></i> Nog ${remainingBeers} ${remainingBeers === 1 ? 'ronde' : 'rondes'} te gaan
           </p>
         </div>
         <div></div>
       </div>
       
+      <!-- Progress Bar -->
+      <div class="mb-6">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">Voortgang</span>
+          <span class="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">${completedRounds}/${totalRounds} rondes</span>
+        </div>
+        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3 sm:h-4">
+          <div class="bg-gradient-to-r from-amber-400 to-orange-500 h-3 sm:h-4 rounded-full transition-all duration-500 ease-out" style="width: ${progressPercentage}%"></div>
+        </div>
+        <div class="flex justify-between mt-2">
+          ${Array.from({length: totalRounds}, (_, i) => `
+            <div class="flex flex-col items-center">
+              <div class="w-3 h-3 sm:w-4 sm:h-4 rounded-full ${i < completedRounds ? 'bg-green-500' : i === completedRounds ? 'bg-amber-500 pulse-animation' : 'bg-gray-300 dark:bg-gray-600'}"></div>
+              <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">${i + 1}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      
       <div class="text-center mb-6 sm:mb-8">
-        <div class="bg-amber-100 rounded-xl p-4 sm:p-6 inline-block">
-          <h3 class="text-2xl sm:text-4xl font-bold text-amber-700 mb-2">${state.currentBeer.beer}</h3>
-          <p class="text-gray-600 text-sm sm:text-base">
+        <div class="bg-amber-100 dark:bg-gray-700 rounded-xl p-4 sm:p-6 inline-block">
+          <h3 class="text-2xl sm:text-4xl font-bold text-amber-700 dark:text-amber-400 mb-2">${state.currentBeer.beer}</h3>
+          <p class="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
             <i class="fas fa-user"></i> Ingebracht door: <span class="font-semibold">${state.currentBeer.name}</span>
           </p>
         </div>
@@ -518,8 +775,8 @@ function renderRound() {
 
       <form id="scoreForm" class="space-y-4 sm:space-y-6">
         ${activePlayers.map(p => `
-          <div class="bg-gray-50 rounded-xl p-4 sm:p-6">
-            <h4 class="text-lg sm:text-xl font-semibold text-gray-800 mb-3">
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6">
+            <h4 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
               <i class="fas fa-user-circle text-blue-500"></i> ${p.name}
             </h4>
             <div class="score-buttons grid grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-2" data-player="${p.name}">
@@ -527,7 +784,7 @@ function renderRound() {
                 <button 
                   type="button" 
                   data-score="${i + 1}"
-                  class="score-btn bg-white border-2 border-gray-300 hover:border-amber-500 text-gray-700 font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg transition-all transform hover:scale-110 text-sm sm:text-base"
+                  class="score-btn bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 hover:border-amber-500 text-gray-700 dark:text-gray-300 font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg transition-all transform hover:scale-110 text-sm sm:text-base"
                 >
                   ${i + 1}
                 </button>
@@ -553,7 +810,7 @@ function renderRound() {
     if (selectedScores[player]) {
       const selectedButton = group.querySelector(`[data-score="${selectedScores[player]}"]`);
       if (selectedButton) {
-        selectedButton.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
+        selectedButton.classList.remove('bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300', 'border-gray-300', 'dark:border-gray-600');
         selectedButton.classList.add('bg-amber-500', 'text-white', 'border-amber-600');
       }
     }
@@ -566,10 +823,10 @@ function renderRound() {
         
         group.querySelectorAll('button').forEach(btn => {
           btn.classList.remove('bg-amber-500', 'text-white', 'border-amber-600');
-          btn.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
+          btn.classList.add('bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300', 'border-gray-300', 'dark:border-gray-600');
         });
         
-        e.target.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
+        e.target.classList.remove('bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300', 'border-gray-300', 'dark:border-gray-600');
         e.target.classList.add('bg-amber-500', 'text-white', 'border-amber-600', 'bounce-animation');
         
         setTimeout(() => e.target.classList.remove('bounce-animation'), 300);
@@ -666,8 +923,29 @@ function renderResults() {
   const bestBeer = avg.length > 0 ? avg[0] : null;
   const worstBeer = avg.length > 0 ? avg[avg.length - 1] : null;
 
+  // Calculate achievements
+  let mostGenerousJudge = null;
+  let hardestCritic = null;
+  
+  if (Object.keys(avgScoreByJudge).length > 0) {
+    // Most generous judge (highest average score given)
+    const judgeAverages = Object.entries(avgScoreByJudge).map(([name, data]) => ({
+      name,
+      average: data.total / data.count
+    }));
+    
+    mostGenerousJudge = judgeAverages.reduce((max, judge) => 
+      judge.average > max.average ? judge : max
+    );
+    
+    // Hardest critic (lowest average score given)
+    hardestCritic = judgeAverages.reduce((min, judge) => 
+      judge.average < min.average ? judge : min
+    );
+  }
+
   app.innerHTML = `
-    <div class="bg-white rounded-2xl shadow-2xl p-4 sm:p-8 mt-4 sm:mt-8">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-8 mt-4 sm:mt-8">
       <div class="flex justify-between items-center mb-6 sm:mb-8">
         ${state.roundHistory.length > 0 ? `
         <button 
@@ -677,12 +955,13 @@ function renderResults() {
           <i class="fas fa-arrow-left"></i> Terug
         </button>
         ` : '<div></div>'}
-        <h1 class="text-3xl sm:text-5xl font-bold text-center text-amber-700 flex-1">
+        <h1 class="text-3xl sm:text-5xl font-bold text-center text-amber-700 dark:text-amber-400 flex-1">
           <i class="fas fa-flag-checkered"></i> Eindresultaat
         </h1>
         <div></div>
       </div>
       
+      <!-- 1. Main Results Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         ${bestBeer ? `
         <div class="bg-gradient-to-br from-green-400 to-green-600 text-white rounded-xl p-4 sm:p-6 text-center transform hover:scale-105 transition-transform">
@@ -739,29 +1018,118 @@ function renderResults() {
         </div>` : ''}
       </div>
 
+      <!-- 2. Achievement Cards -->
+      ${mostGenerousJudge || hardestCritic ? `
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        ${mostGenerousJudge ? `
+        <div class="bg-gradient-to-br from-emerald-400 to-green-500 text-white rounded-xl p-4 sm:p-6 text-center transform hover:scale-105 transition-transform">
+          <i class="fas fa-heart text-3xl sm:text-4xl mb-2 sm:mb-3"></i>
+          <h3 class="text-lg sm:text-xl font-bold mb-2">Meest Genereuze Beoordelaar</h3>
+          <p class="text-lg sm:text-xl font-bold">${mostGenerousJudge.name}</p>
+          <p class="text-sm sm:text-base opacity-90">Gemiddeld ${mostGenerousJudge.average.toFixed(1)} punten gegeven</p>
+          <div class="mt-2">
+            <i class="fas fa-award text-yellow-300"></i>
+          </div>
+        </div>
+        ` : ''}
+        
+        ${hardestCritic ? `
+        <div class="bg-gradient-to-br from-purple-500 to-indigo-600 text-white rounded-xl p-4 sm:p-6 text-center transform hover:scale-105 transition-transform">
+          <i class="fas fa-gavel text-3xl sm:text-4xl mb-2 sm:mb-3"></i>
+          <h3 class="text-lg sm:text-xl font-bold mb-2">Hardste Criticus</h3>
+          <p class="text-lg sm:text-xl font-bold">${hardestCritic.name}</p>
+          <p class="text-sm sm:text-base opacity-90">Gemiddeld ${hardestCritic.average.toFixed(1)} punten gegeven</p>
+          <div class="mt-2">
+            <i class="fas fa-medal text-gray-300"></i>
+          </div>
+        </div>
+        ` : ''}
+      </div>
+      ` : ''}
+
+      <!-- 2. Round Breakdown -->
+      <div class="bg-indigo-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+        <h3 class="text-xl sm:text-2xl font-bold text-indigo-800 dark:text-indigo-400 mb-4">
+          <i class="fas fa-history"></i> Ronden Breakdown
+        </h3>
+        <div class="space-y-4">
+          ${state.scores.map((round, index) => {
+            const participants = round.scores.map(s => s.player);
+            const eliminated = round.eliminated;
+            const avgScore = round.scores.length > 0 ? (round.scores.reduce((sum, s) => sum + s.score, 0) / round.scores.length).toFixed(1) : 'N/A';
+            
+            // Calculate round duration
+            let roundDuration = 'Onbekend';
+            if (state.roundHistory.length > index + 1) {
+              const startTime = index === 0 ? state.startTime : state.roundHistory[index].timestamp;
+              const endTime = state.roundHistory[index + 1].timestamp;
+              const duration = Math.floor((endTime - startTime) / 1000);
+              roundDuration = duration < 60 ? `${duration}s` : `${Math.floor(duration / 60)}m ${duration % 60}s`;
+            }
+            
+            return `
+              <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border-2 border-indigo-200 dark:border-indigo-600">
+                <div class="flex justify-between items-start mb-3">
+                  <h4 class="text-lg font-semibold text-indigo-700 dark:text-indigo-400">
+                    <i class="fas fa-circle-dot"></i> Ronde ${index + 1}
+                  </h4>
+                  <span class="text-sm text-gray-500 dark:text-gray-400">
+                    <i class="fas fa-clock"></i> ${roundDuration}
+                  </span>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+                  <div class="bg-amber-50 dark:bg-amber-900 rounded-lg p-3">
+                    <p class="text-sm font-medium text-amber-800 dark:text-amber-300">Bier</p>
+                    <p class="text-lg font-bold text-amber-900 dark:text-amber-100">${round.beer}</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400">Door: ${round.owner}</p>
+                  </div>
+                  <div class="bg-green-50 dark:bg-green-900 rounded-lg p-3">
+                    <p class="text-sm font-medium text-green-800 dark:text-green-300">Deelnemers</p>
+                    <p class="text-lg font-bold text-green-900 dark:text-green-100">${participants.length}</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400">${participants.join(', ')}</p>
+                  </div>
+                  <div class="bg-blue-50 dark:bg-blue-900 rounded-lg p-3">
+                    <p class="text-sm font-medium text-blue-800 dark:text-blue-300">Gem. Score</p>
+                    <p class="text-lg font-bold text-blue-900 dark:text-blue-100">${avgScore}</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400">${round.scores.length} beoordelingen</p>
+                  </div>
+                  <div class="bg-red-50 dark:bg-red-900 rounded-lg p-3">
+                    <p class="text-sm font-medium text-red-800 dark:text-red-300">Afvallers</p>
+                    <p class="text-lg font-bold text-red-900 dark:text-red-100">${eliminated.length}</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400">${eliminated.length > 0 ? eliminated.join(', ') : 'Geen'}</p>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- 3. Beer Ranking -->
       ${avg.length > 0 ? `
-      <div class="bg-amber-50 rounded-xl p-6 mb-8">
-        <h3 class="text-2xl font-bold text-amber-800 mb-4">
+      <div class="bg-amber-50 dark:bg-gray-700 rounded-xl p-6 mb-8">
+        <h3 class="text-2xl font-bold text-amber-800 dark:text-amber-400 mb-4">
           <i class="fas fa-list-ol"></i> Volledige Bier Ranking
         </h3>
         <div class="space-y-3">
           ${avg.map((b, i) => {
             const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
-            const bgColor = i === 0 ? 'bg-gradient-to-r from-yellow-100 to-yellow-200' : 
-                           i === 1 ? 'bg-gradient-to-r from-gray-100 to-gray-200' : 
-                           i === 2 ? 'bg-gradient-to-r from-orange-100 to-orange-200' : 'bg-white';
+            const bgColor = i === 0 ? 'bg-gradient-to-r from-yellow-100 to-yellow-200 dark:from-yellow-900 dark:to-yellow-800' : 
+                           i === 1 ? 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600' : 
+                           i === 2 ? 'bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900 dark:to-orange-800' : 'bg-white dark:bg-gray-800';
             return `
-              <div class="${bgColor} rounded-lg p-4 flex items-center justify-between border-2 border-gray-200">
+              <div class="${bgColor} rounded-lg p-4 flex items-center justify-between border-2 border-gray-200 dark:border-gray-600">
                 <div class="flex items-center gap-4">
-                  <span class="text-2xl font-bold">${medal}</span>
+                  <span class="text-2xl font-bold text-gray-800 dark:text-gray-200">${medal}</span>
                   <div>
-                    <p class="text-lg font-semibold">${b.beer}</p>
-                    <p class="text-sm text-gray-600">Door: ${b.owner}</p>
+                    <p class="text-lg font-semibold text-gray-800 dark:text-gray-200">${b.beer}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Door: ${b.owner}</p>
                   </div>
                 </div>
                 <div class="text-right">
-                  <p class="text-2xl font-bold text-amber-600">${b.average}</p>
-                  <p class="text-sm text-gray-600">gemiddeld</p>
+                  <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">${b.average}</p>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">gemiddeld</p>
                 </div>
               </div>
             `;
@@ -770,18 +1138,45 @@ function renderResults() {
       </div>
       ` : ''}
 
-      <div class="bg-green-50 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
-        <h3 class="text-xl sm:text-2xl font-bold text-green-800 mb-4">
+      <!-- 4. Missed Beers -->
+      ${allMissedBeers.length > 0 ? `
+      <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+        <h3 class="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+          <i class="fas fa-question-circle"></i> Gemiste Bieren
+        </h3>
+        <p class="text-gray-600 dark:text-gray-400 mb-4 text-sm sm:text-base">Deze bieren zijn niet beoordeeld omdat iedereen al was afgevallen of niet aan bod gekomen:</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          ${allMissedBeers.map(p => `
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-3 sm:p-4 border-2 border-gray-300 dark:border-gray-600 border-dashed">
+              <div class="flex items-center gap-3">
+                <i class="fas fa-beer text-2xl sm:text-3xl text-gray-400"></i>
+                <div class="flex-1">
+                  <p class="font-semibold text-gray-700 dark:text-gray-300 text-sm sm:text-base">${p.beer}</p>
+                  <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Door: ${p.name}</p>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <p class="text-center text-gray-600 dark:text-gray-400 mt-4 text-sm sm:text-base">
+          Totaal: ${allMissedBeers.length} gemiste ${allMissedBeers.length === 1 ? 'bier' : 'bieren'}
+        </p>
+      </div>
+      ` : ''}
+
+      <!-- 5. Players -->
+      <div class="bg-green-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+        <h3 class="text-xl sm:text-2xl font-bold text-green-800 dark:text-green-400 mb-4">
           <i class="fas fa-users"></i> Alle Deelnemers
         </h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           ${state.players.map(p => `
-            <div class="bg-white rounded-lg p-3 sm:p-4 border-2 border-green-200 flex items-center gap-3">
-              <i class="fas fa-user-circle text-2xl text-green-600"></i>
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-3 sm:p-4 border-2 border-green-200 dark:border-green-600 flex items-center gap-3">
+              <i class="fas fa-user-circle text-2xl text-green-600 dark:text-green-400"></i>
               <div class="flex-1">
-                <p class="font-semibold text-green-800 text-sm sm:text-base">${p.name}</p>
-                <p class="text-xs sm:text-sm text-gray-600 flex items-center gap-1">
-                  <i class="fas fa-beer text-amber-600"></i>
+                <p class="font-semibold text-green-800 dark:text-green-400 text-sm sm:text-base">${p.name}</p>
+                <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                  <i class="fas fa-beer text-amber-600 dark:text-amber-400"></i>
                   ${p.beer}
                 </p>
               </div>
@@ -797,30 +1192,31 @@ function renderResults() {
             </div>
           `).join('')}
         </div>
-        <p class="text-center text-gray-600 mt-4 text-sm sm:text-base">
+        <p class="text-center text-gray-600 dark:text-gray-400 mt-4 text-sm sm:text-base">
           Totaal: ${state.players.length} deelnemers
         </p>
       </div>
 
+      <!-- 6. Judge Statistics -->
       ${Object.keys(avgScoreByJudge).length > 0 ? `
-      <div class="bg-blue-50 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
-        <h3 class="text-xl sm:text-2xl font-bold text-blue-800 mb-4">
+      <div class="bg-blue-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+        <h3 class="text-xl sm:text-2xl font-bold text-blue-800 dark:text-blue-400 mb-4">
           <i class="fas fa-chart-bar"></i> Beoordelaarsstatistieken
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           ${Object.entries(avgScoreByJudge).map(([name, data]) => {
             const avgScore = (data.total / data.count).toFixed(2);
             return `
-              <div class="bg-white rounded-lg p-4 border-2 border-blue-200">
-                <h4 class="text-lg font-semibold text-blue-700 mb-2">
+              <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border-2 border-blue-200 dark:border-blue-600">
+                <h4 class="text-lg font-semibold text-blue-700 dark:text-blue-400 mb-2">
                   <i class="fas fa-user"></i> ${name}
                 </h4>
-                <p class="text-sm text-gray-600 mb-3">Gemiddelde score gegeven: <span class="font-bold text-blue-600 text-lg">${avgScore}</span></p>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Gemiddelde score gegeven: <span class="font-bold text-blue-600 dark:text-blue-400 text-lg">${avgScore}</span></p>
                 <div class="space-y-1">
                   ${data.given.map(g => `
                     <div class="flex justify-between text-sm">
-                      <span class="text-gray-600">${g.beer}:</span>
-                      <span class="font-semibold">${g.score}</span>
+                      <span class="text-gray-600 dark:text-gray-400">${g.beer}:</span>
+                      <span class="font-semibold text-gray-800 dark:text-gray-200">${g.score}</span>
                     </div>
                   `).join('')}
                 </div>
@@ -831,33 +1227,11 @@ function renderResults() {
       </div>
       ` : ''}
 
-      ${allMissedBeers.length > 0 ? `
-      <div class="bg-gray-50 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
-        <h3 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">
-          <i class="fas fa-question-circle"></i> Gemiste Bieren
-        </h3>
-        <p class="text-gray-600 mb-4 text-sm sm:text-base">Deze bieren zijn niet beoordeeld omdat iedereen al was afgevallen of niet aan bod gekomen:</p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          ${allMissedBeers.map(p => `
-            <div class="bg-white rounded-lg p-3 sm:p-4 border-2 border-gray-300 border-dashed">
-              <div class="flex items-center gap-3">
-                <i class="fas fa-beer text-2xl sm:text-3xl text-gray-400"></i>
-                <div class="flex-1">
-                  <p class="font-semibold text-gray-700 text-sm sm:text-base">${p.beer}</p>
-                  <p class="text-xs sm:text-sm text-gray-500">Door: ${p.name}</p>
-                </div>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-        <p class="text-center text-gray-600 mt-4 text-sm sm:text-base">
-          Totaal: ${allMissedBeers.length} gemiste ${allMissedBeers.length === 1 ? 'bier' : 'bieren'}
-        </p>
-      </div>
-      ` : ''}
+      <!-- End of sections -->
+
 
       <div class="text-center mb-8">
-        <p class="text-lg text-gray-600">
+        <p class="text-lg text-gray-600 dark:text-gray-400">
           <i class="fas fa-clock"></i> Totale speeltijd: 
           <span class="font-bold">${Math.floor(totalTime / 60)} minuten en ${totalTime % 60} seconden</span>
         </p>
@@ -872,6 +1246,52 @@ function renderResults() {
     </div>
   `;
 }
+
+// Settings menu functionality
+function toggleSettingsPanel() {
+  const panel = document.getElementById('settingsPanel');
+  panel.classList.toggle('open');
+}
+
+// Dark mode functionality
+function toggleDarkMode() {
+  state.darkMode = !state.darkMode;
+  localStorage.setItem('darkMode', state.darkMode);
+  updateDarkMode();
+  updateSettingsPanel();
+  // Dark mode changes are applied via CSS classes - no re-rendering needed
+}
+
+function updateDarkMode() {
+  if (state.darkMode) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+  
+  // Update slider appearance
+  const slider = document.getElementById('darkModeSlider');
+  if (slider) {
+    if (state.darkMode) {
+      slider.classList.add('active');
+    } else {
+      slider.classList.remove('active');
+    }
+  }
+}
+
+function updateSettingsPanel() {
+  const panel = document.getElementById('settingsPanel');
+  if (panel) {
+    const themeStatus = panel.querySelector('.text-xs');
+    if (themeStatus) {
+      themeStatus.textContent = state.darkMode ? 'Donker thema actief' : 'Licht thema actief';
+    }
+  }
+}
+
+// Initialize dark mode on page load
+updateDarkMode();
 
 renderSetup();
   </script>
