@@ -188,12 +188,177 @@
         transform: translateX(0);
       }
       to {
-        transform: translateX(-60px);
+        transform: translateX(-30px);
+      }
+    }
+    
+    @media (min-width: 640px) {
+      @keyframes slideCardLeft {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-60px);
+        }
       }
     }
     
     .card-slide-left {
       animation: slideCardLeft 0.6s ease-out forwards;
+    }
+    
+    /* Print styles - Completely different layout for print */
+    @media print {
+      @page {
+        margin: 20mm;
+        size: A4;
+      }
+      
+      /* Hide web elements, show print elements */
+      .no-print,
+      .settings-menu,
+      button {
+        display: none !important;
+      }
+      
+      .screen-only {
+        display: none !important;
+      }
+      
+      .print-only {
+        display: block !important;
+      }
+      
+      /* Basic print setup */
+      body {
+        background: white !important;
+        color: black !important;
+        font-family: 'Times New Roman', serif !important;
+        font-size: 11pt !important;
+        line-height: 1.3 !important;
+      }
+      
+      .container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      
+      /* Print header */
+      .print-header {
+        text-align: center;
+        border-bottom: 2pt solid black;
+        padding-bottom: 10pt;
+        margin-bottom: 20pt;
+      }
+      
+      .print-title {
+        font-size: 24pt !important;
+        font-weight: bold !important;
+        margin-bottom: 5pt !important;
+      }
+      
+      .print-subtitle {
+        font-size: 12pt !important;
+        color: #666 !important;
+      }
+      
+      /* Print table styles */
+      .print-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15pt 0;
+        page-break-inside: avoid;
+      }
+      
+      .print-table th,
+      .print-table td {
+        border: 1pt solid black;
+        padding: 6pt;
+        text-align: left;
+        vertical-align: top;
+      }
+      
+      .print-table th {
+        background: #f0f0f0 !important;
+        font-weight: bold;
+      }
+      
+      /* Print section headers */
+      .print-section {
+        margin: 20pt 0 10pt 0;
+        page-break-after: avoid;
+      }
+      
+      .print-section h2 {
+        font-size: 16pt !important;
+        font-weight: bold !important;
+        border-bottom: 1pt solid black;
+        padding-bottom: 3pt;
+        margin-bottom: 10pt;
+      }
+      
+      .print-section h3 {
+        font-size: 14pt !important;
+        font-weight: bold !important;
+        margin: 10pt 0 5pt 0;
+      }
+      
+      /* Hide web content when printing, show only print layout */
+      .bg-white.dark\\:bg-gray-800.rounded-2xl > *:not(.print-only) {
+        display: none !important;
+      }
+      
+      /* Print lists */
+      .print-list {
+        margin: 10pt 0;
+      }
+      
+      .print-list-item {
+        margin: 3pt 0;
+        padding-left: 15pt;
+        text-indent: -15pt;
+      }
+      
+      /* Print summary boxes */
+      .print-summary {
+        border: 2pt solid black;
+        padding: 10pt;
+        margin: 15pt 0;
+        page-break-inside: avoid;
+      }
+      
+      .print-summary h3 {
+        margin-top: 0 !important;
+        font-size: 14pt !important;
+        font-weight: bold !important;
+      }
+      
+      /* Page breaks */
+      .page-break {
+        page-break-before: always;
+      }
+      
+      /* Two column layout for some sections */
+      .print-two-column {
+        column-count: 2;
+        column-gap: 20pt;
+        column-rule: 1pt solid #ccc;
+      }
+      
+      /* Remove all styling from original elements */
+      * {
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background-image: none !important;
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+      }
+      
+      .fas {
+        display: none !important;
+      }
     }
     
   </style>
@@ -537,7 +702,7 @@ function showLootboxAnimation(beers) {
   // Create animation sequence with fake-out
   const animationSequence = [];
   const totalDuration = 5000; // 5 seconds total
-  const cycles = 30; // Number of cycles through beers
+  const cycles = 15; // Number of cycles through beers
   let rollSteps = 0; // Will be set later for the fake-out
   
   // Regular cycling
@@ -583,22 +748,22 @@ function showLootboxAnimation(beers) {
       
       slider.innerHTML = `
         <div class="w-full h-full flex items-center justify-center slide-animation">
-          <div class="relative w-48 sm:w-64 h-24 sm:h-32 ${isNearEnd ? 'pulse-animation' : ''}">
+          <div class="relative w-36 sm:w-64 h-20 sm:h-32 ${isNearEnd ? 'pulse-animation' : ''}">
             <!-- Beer card -->
-            <div class="absolute inset-0 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg border-2 border-amber-400 shadow-lg transform ${isFinal ? 'scale-105' : ''}">
+            <div class="absolute inset-0 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg border-2 border-amber-400 shadow-lg transform ${isFinal ? 'scale-95 sm:scale-105' : 'scale-90 sm:scale-100'}">
               <!-- Beer icon background -->
               <div class="absolute top-1 sm:top-2 right-1 sm:right-2 opacity-20">
-                <i class="fas fa-beer text-2xl sm:text-4xl text-amber-600"></i>
+                <i class="fas fa-beer text-xl sm:text-4xl text-amber-600"></i>
               </div>
               
               <!-- Content -->
-              <div class="relative h-full flex flex-col justify-center items-center p-2 sm:p-4">
-                <h3 class="text-lg sm:text-2xl font-bold text-amber-800 text-center mb-1">
+              <div class="relative h-full flex flex-col justify-center items-center p-1 sm:p-4">
+                <h3 class="text-sm sm:text-2xl font-bold text-amber-800 text-center mb-0 sm:mb-1">
                   ${currentBeer.beer}
                 </h3>
                 <p class="text-xs sm:text-sm text-gray-600 flex items-center gap-1">
-                  <i class="fas fa-user-circle text-xs"></i>
-                  <span>${currentBeer.name}</span>
+                  <i class="fas fa-user-circle text-xs hidden sm:inline"></i>
+                  <span class="text-xs">${currentBeer.name}</span>
                 </p>
               </div>
               
@@ -630,22 +795,22 @@ function showLootboxAnimation(beers) {
       setTimeout(() => {
         slider.innerHTML = `
           <div class="w-full h-full flex items-center justify-center">
-            <div class="relative w-48 sm:w-64 h-24 sm:h-32 glow-animation">
+            <div class="relative w-36 sm:w-64 h-20 sm:h-32 glow-animation">
               <!-- Beer card -->
-              <div class="absolute inset-0 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-lg border-3 border-yellow-400 shadow-2xl transform scale-110">
+              <div class="absolute inset-0 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-lg border-3 border-yellow-400 shadow-2xl transform scale-90 sm:scale-110">
                 <!-- Beer icon background -->
                 <div class="absolute top-1 sm:top-2 right-1 sm:right-2 opacity-20">
                   <i class="fas fa-beer text-2xl sm:text-4xl text-amber-600"></i>
                 </div>
                 
                 <!-- Content -->
-                <div class="relative h-full flex flex-col justify-center items-center p-2 sm:p-4">
-                  <h3 class="text-lg sm:text-2xl font-bold text-amber-800 text-center mb-1">
+                <div class="relative h-full flex flex-col justify-center items-center p-1 sm:p-4">
+                  <h3 class="text-sm sm:text-2xl font-bold text-amber-800 text-center mb-0 sm:mb-1">
                     ${state.currentBeer.beer}
                   </h3>
                   <p class="text-xs sm:text-sm text-gray-600 flex items-center gap-1">
-                    <i class="fas fa-user-circle text-xs"></i>
-                    <span>${state.currentBeer.name}</span>
+                    <i class="fas fa-user-circle text-xs hidden sm:inline"></i>
+                    <span class="text-xs">${state.currentBeer.name}</span>
                   </p>
                 </div>
                 
@@ -665,8 +830,17 @@ function showLootboxAnimation(beers) {
         
         // Show continue button inside the selection window
         setTimeout(() => {
-          const selectionWindow = document.querySelector('.relative.h-40.sm\\:h-48.overflow-hidden');
+          const selectionWindow = document.querySelector('.relative.h-40.sm\\:h-48.overflow-hidden') || 
+                                  document.querySelector('.relative.overflow-hidden') ||
+                                  document.querySelector('#lootboxContainer .relative');
+          
           if (selectionWindow) {
+            // Remove any existing button container first
+            const existingButton = document.getElementById('continueButtonContainer');
+            if (existingButton) {
+              existingButton.remove();
+            }
+            
             // First, slide the beer card to the left
             const beerCard = document.querySelector('#beerSlider > div');
             if (beerCard) {
@@ -676,13 +850,13 @@ function showLootboxAnimation(beers) {
             // Create button container positioned to the right
             const buttonContainer = document.createElement('div');
             buttonContainer.id = 'continueButtonContainer';
-            buttonContainer.className = 'absolute inset-0 flex items-center justify-end pr-8 z-20 pointer-events-none';
+            buttonContainer.className = 'absolute inset-0 flex items-center justify-end pr-2 sm:pr-8 z-20 pointer-events-none';
             buttonContainer.innerHTML = `
               <button 
                 onclick="proceedToRating()" 
-                class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-xl text-lg transition-all transform hover:scale-110 shadow-lg button-appear pointer-events-auto"
+                class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-lg sm:rounded-xl text-base sm:text-lg transition-all transform hover:scale-110 shadow-lg button-appear pointer-events-auto"
               >
-                Start <i class="fas fa-arrow-right ml-2"></i>
+                Start <i class="fas fa-arrow-right ml-1 sm:ml-2 text-sm sm:text-base"></i>
               </button>
             `;
             
@@ -696,9 +870,24 @@ function showLootboxAnimation(beers) {
                 button.classList.remove('button-appear');
                 button.classList.add('button-animated');
               }
-            }, 800);
+            }, 1000); // Increased timeout to be safer
+          } else {
+            // Fallback: if we can't find the container, add button to app
+            console.warn('Could not find selection window, adding fallback button');
+            const fallbackButton = document.createElement('div');
+            fallbackButton.id = 'fallbackButton';
+            fallbackButton.className = 'text-center mt-4';
+            fallbackButton.innerHTML = `
+              <button 
+                onclick="proceedToRating()" 
+                class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-xl text-lg transition-all transform hover:scale-110 shadow-lg"
+              >
+                Start <i class="fas fa-arrow-right ml-2"></i>
+              </button>
+            `;
+            document.getElementById('app').appendChild(fallbackButton);
           }
-        }, 800);
+        }, 1000); // Increased initial timeout
       }, 500);
     }
   }
@@ -707,6 +896,12 @@ function showLootboxAnimation(beers) {
 }
 
 function proceedToRating() {
+  // Clean up any existing buttons
+  const continueButton = document.getElementById('continueButtonContainer');
+  const fallbackButton = document.getElementById('fallbackButton');
+  if (continueButton) continueButton.remove();
+  if (fallbackButton) fallbackButton.remove();
+  
   renderRound();
 }
 
@@ -729,7 +924,7 @@ function renderRound() {
         ${state.roundHistory.length > 0 ? `
         <button 
           onclick="goBackOneRound()"
-          class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-3 sm:px-4 rounded-lg transition-all text-sm sm:text-base"
+          class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-3 sm:px-4 rounded-lg transition-all text-sm sm:text-base no-print"
         >
           <i class="fas fa-arrow-left"></i> Terug
         </button>
@@ -898,8 +1093,8 @@ function renderResults() {
 
   const avg = Object.entries(allScores).map(([beer, scores]) => {
     const owner = state.players.find(p => p.beer === beer).name;
-    const average = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2);
-    return { beer, average: parseFloat(average), owner };
+    const average = (scores.reduce((a, b) => a + b, 0) / scores.length);
+    return { beer, average: average, owner };
   }).sort((a, b) => b.average - a.average);
 
   // Find unrated/missed beers
@@ -946,7 +1141,7 @@ function renderResults() {
 
   app.innerHTML = `
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-8 mt-4 sm:mt-8">
-      <div class="flex justify-between items-center mb-6 sm:mb-8">
+      <div class="flex justify-between items-center mb-6 sm:mb-8 no-print">
         ${state.roundHistory.length > 0 ? `
         <button 
           onclick="goBackOneRound()"
@@ -962,13 +1157,13 @@ function renderResults() {
       </div>
       
       <!-- 1. Main Results Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 no-print">
         ${bestBeer ? `
         <div class="bg-gradient-to-br from-green-400 to-green-600 text-white rounded-xl p-4 sm:p-6 text-center transform hover:scale-105 transition-transform">
           <i class="fas fa-trophy text-3xl sm:text-5xl mb-2 sm:mb-3"></i>
           <h3 class="text-lg sm:text-xl font-bold mb-2">Beste Bier</h3>
           <p class="text-lg sm:text-2xl font-bold">${bestBeer.beer}</p>
-          <p class="text-sm sm:text-lg">Score: ${bestBeer.average}</p>
+          <p class="text-sm sm:text-lg">Score: ${bestBeer.average.toFixed(2)}</p>
           <p class="text-xs sm:text-sm opacity-90">Door: ${bestBeer.owner}</p>
         </div>
         ` : ''}
@@ -978,7 +1173,7 @@ function renderResults() {
           <i class="fas fa-skull text-3xl sm:text-5xl mb-2 sm:mb-3"></i>
           <h3 class="text-lg sm:text-xl font-bold mb-2">Slechtste Bier</h3>
           <p class="text-lg sm:text-2xl font-bold">${worstBeer.beer}</p>
-          <p class="text-sm sm:text-lg">Score: ${worstBeer.average}</p>
+          <p class="text-sm sm:text-lg">Score: ${worstBeer.average.toFixed(2)}</p>
           <p class="text-xs sm:text-sm opacity-90">Door: ${worstBeer.owner}</p>
         </div>
         ` : ''}
@@ -1020,7 +1215,7 @@ function renderResults() {
 
       <!-- 2. Achievement Cards -->
       ${mostGenerousJudge || hardestCritic ? `
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8 no-print">
         ${mostGenerousJudge ? `
         <div class="bg-gradient-to-br from-emerald-400 to-green-500 text-white rounded-xl p-4 sm:p-6 text-center transform hover:scale-105 transition-transform">
           <i class="fas fa-heart text-3xl sm:text-4xl mb-2 sm:mb-3"></i>
@@ -1048,7 +1243,7 @@ function renderResults() {
       ` : ''}
 
       <!-- 2. Round Breakdown -->
-      <div class="bg-indigo-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+      <div class="bg-indigo-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 no-print">
         <h3 class="text-xl sm:text-2xl font-bold text-indigo-800 dark:text-indigo-400 mb-4">
           <i class="fas fa-history"></i> Ronden Breakdown
         </h3>
@@ -1108,7 +1303,7 @@ function renderResults() {
 
       <!-- 3. Beer Ranking -->
       ${avg.length > 0 ? `
-      <div class="bg-amber-50 dark:bg-gray-700 rounded-xl p-6 mb-8">
+      <div class="bg-amber-50 dark:bg-gray-700 rounded-xl p-6 mb-8 no-print">
         <h3 class="text-2xl font-bold text-amber-800 dark:text-amber-400 mb-4">
           <i class="fas fa-list-ol"></i> Volledige Bier Ranking
         </h3>
@@ -1128,7 +1323,7 @@ function renderResults() {
                   </div>
                 </div>
                 <div class="text-right">
-                  <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">${b.average}</p>
+                  <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">${b.average.toFixed(2)}</p>
                   <p class="text-sm text-gray-600 dark:text-gray-400">gemiddeld</p>
                 </div>
               </div>
@@ -1140,7 +1335,7 @@ function renderResults() {
 
       <!-- 4. Missed Beers -->
       ${allMissedBeers.length > 0 ? `
-      <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+      <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 no-print">
         <h3 class="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
           <i class="fas fa-question-circle"></i> Gemiste Bieren
         </h3>
@@ -1165,7 +1360,7 @@ function renderResults() {
       ` : ''}
 
       <!-- 5. Players -->
-      <div class="bg-green-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+      <div class="bg-green-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 no-print">
         <h3 class="text-xl sm:text-2xl font-bold text-green-800 dark:text-green-400 mb-4">
           <i class="fas fa-users"></i> Alle Deelnemers
         </h3>
@@ -1199,7 +1394,7 @@ function renderResults() {
 
       <!-- 6. Judge Statistics -->
       ${Object.keys(avgScoreByJudge).length > 0 ? `
-      <div class="bg-blue-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+      <div class="bg-blue-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 no-print">
         <h3 class="text-xl sm:text-2xl font-bold text-blue-800 dark:text-blue-400 mb-4">
           <i class="fas fa-chart-bar"></i> Beoordelaarsstatistieken
         </h3>
@@ -1230,19 +1425,218 @@ function renderResults() {
       <!-- End of sections -->
 
 
-      <div class="text-center mb-8">
+      <div class="text-center mb-8 no-print">
         <p class="text-lg text-gray-600 dark:text-gray-400">
           <i class="fas fa-clock"></i> Totale speeltijd: 
           <span class="font-bold">${Math.floor(totalTime / 60)} minuten en ${totalTime % 60} seconden</span>
         </p>
       </div>
+      
+      <!-- Print-only content - Completely different layout for print -->
+      <div class="print-only" style="display: none;">
+        <!-- Print Header -->
+        <div class="print-header">
+          <div class="print-title">High Bieren Spel - Resultaten</div>
+          <div class="print-subtitle">Datum: ${new Date().toLocaleDateString('nl-NL')} | Speeltijd: ${Math.floor(totalTime / 60)} minuten</div>
+        </div>
 
-      <button 
-        onclick="location.reload()"
-        class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
-      >
-        <i class="fas fa-redo"></i> Opnieuw Spelen
-      </button>
+        <!-- Summary Section -->
+        <div class="print-summary">
+          <h3>Samenvatting</h3>
+          <div class="print-two-column">
+            <div>
+              <strong>Totaal aantal spelers:</strong> ${state.players.length}<br>
+              <strong>Aantal rondes gespeeld:</strong> ${state.scores.length}<br>
+              <strong>Aantal volhouders:</strong> ${volhouders.length}
+            </div>
+            <div>
+              ${bestBeer ? `<strong>Beste bier:</strong> ${bestBeer.beer} (${bestBeer.average.toFixed(2)})<br>` : ''}
+              ${worstBeer ? `<strong>Slechtste bier:</strong> ${worstBeer.beer} (${worstBeer.average.toFixed(2)})<br>` : ''}
+              <strong>Totale speeltijd:</strong> ${Math.floor(totalTime / 60)} minuten
+            </div>
+          </div>
+        </div>
+
+        <!-- Achievement Cards in Print -->
+        ${(mostGenerousJudge || hardestCritic || bestBeer || worstBeer || volhouders.length > 0 || (lafste && lafste.length > 0)) ? `
+        <div class="print-section">
+          <h2>Behaalde Prestaties</h2>
+          <table class="print-table">
+            <tr>
+              <th>Prestatie</th>
+              <th>Winnaar</th>
+              <th>Details</th>
+            </tr>
+            ${bestBeer ? `
+            <tr>
+              <td>Beste Bier</td>
+              <td>${bestBeer.beer}</td>
+              <td>Gemiddelde: ${bestBeer.average.toFixed(2)} | Door: ${bestBeer.owner}</td>
+            </tr>` : ''}
+            ${worstBeer ? `
+            <tr>
+              <td>Slechtste Bier</td>
+              <td>${worstBeer.beer}</td>
+              <td>Gemiddelde: ${worstBeer.average.toFixed(2)} | Door: ${worstBeer.owner}</td>
+            </tr>` : ''}
+            ${volhouders.length > 0 ? `
+            <tr>
+              <td>Volhouders</td>
+              <td>${volhouders.map(p => p.name).join(', ')}</td>
+              <td>Hebben alle rondes overleefd</td>
+            </tr>` : ''}
+            ${lafste && lafste.length > 0 ? `
+            <tr>
+              <td>Lafste Borrelaar(s)</td>
+              <td>${lafste.join(', ')}</td>
+              <td>Afgevallen in ronde ${earliestRound}</td>
+            </tr>` : ''}
+            ${mostGenerousJudge ? `
+            <tr>
+              <td>Meest Genereuze Beoordelaar</td>
+              <td>${mostGenerousJudge.name}</td>
+              <td>Gemiddelde score gegeven: ${mostGenerousJudge.average.toFixed(2)}</td>
+            </tr>` : ''}
+            ${hardestCritic ? `
+            <tr>
+              <td>Hardste Criticus</td>
+              <td>${hardestCritic.name}</td>
+              <td>Gemiddelde score gegeven: ${hardestCritic.average.toFixed(2)}</td>
+            </tr>` : ''}
+          </table>
+        </div>` : ''}
+
+        <!-- Round Breakdown -->
+        ${state.roundHistory.length > 0 ? `
+        <div class="print-section page-break">
+          <h2>Rondes Overzicht</h2>
+          <table class="print-table">
+            <tr>
+              <th>Ronde</th>
+              <th>Bier</th>
+              <th>Eigenaar</th>
+              <th>Deelnemers</th>
+              <th>Afvallers</th>
+              <th>Duur</th>
+            </tr>
+            ${state.roundHistory.map((round, index) => {
+              const roundData = state.scores[index];
+              if (!roundData) return '';
+              
+              const duration = index < state.roundHistory.length - 1 
+                ? Math.round((state.roundHistory[index + 1].timestamp - round.timestamp) / 1000)
+                : Math.round((Date.now() - round.timestamp) / 1000);
+              
+              const participants = roundData.scores.map(s => s.player);
+              const eliminated = roundData.eliminated;
+              
+              return `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${roundData.beer}</td>
+                <td>${roundData.owner}</td>
+                <td>${participants.join(', ')}</td>
+                <td>${eliminated.length > 0 ? eliminated.join(', ') : 'Geen'}</td>
+                <td>${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}</td>
+              </tr>`;
+            }).join('')}
+          </table>
+        </div>` : ''}
+
+        <!-- Beer Ranking -->
+        ${avg.length > 0 ? `
+        <div class="print-section">
+          <h2>Bier Ranking</h2>
+          <table class="print-table">
+            <tr>
+              <th>Positie</th>
+              <th>Bier</th>
+              <th>Gemiddelde Score</th>
+              <th>Eigenaar</th>
+            </tr>
+            ${avg.map((beer, index) => `
+            <tr>
+              <td>#${index + 1}</td>
+              <td>${beer.beer}</td>
+              <td>${beer.average.toFixed(2)}</td>
+              <td>${beer.owner}</td>
+            </tr>
+            `).join('')}
+          </table>
+        </div>` : ''}
+
+        <!-- Missed Beers -->
+        ${allMissedBeers.length > 0 ? `
+        <div class="print-section">
+          <h2>Gemiste Bieren</h2>
+          <div class="print-list">
+            ${allMissedBeers.map(beer => `
+              <div class="print-list-item">${beer.beer} (van ${beer.name})</div>
+            `).join('')}
+          </div>
+          <p><em>Totaal gemiste bieren: ${allMissedBeers.length}</em></p>
+        </div>` : ''}
+
+        <!-- Participants -->
+        <div class="print-section">
+          <h2>Deelnemers</h2>
+          <table class="print-table">
+            <tr>
+              <th>Naam</th>
+              <th>Meegebracht Bier</th>
+              <th>Status</th>
+              <th>Afgevallen in Ronde</th>
+            </tr>
+            ${state.players.map(player => `
+            <tr>
+              <td>${player.name}</td>
+              <td>${player.beer}</td>
+              <td>${player.eliminated ? 'Afgevallen' : 'Volgehouden'}</td>
+              <td>${player.eliminated ? (rondeVanAfval[player.name] || 'Onbekend') : '-'}</td>
+            </tr>
+            `).join('')}
+          </table>
+        </div>
+
+        <!-- Judge Statistics -->
+        ${Object.keys(avgScoreByJudge).length > 0 ? `
+        <div class="print-section">
+          <h2>Beoordelaarsstatistieken</h2>
+          <table class="print-table">
+            <tr>
+              <th>Beoordelaar</th>
+              <th>Gemiddelde Score Gegeven</th>
+              <th>Aantal Beoordelingen</th>
+              <th>Beoordelingen Details</th>
+            </tr>
+            ${Object.entries(avgScoreByJudge).map(([name, data]) => `
+            <tr>
+              <td>${name}</td>
+              <td>${(data.total / data.count).toFixed(2)}</td>
+              <td>${data.count}</td>
+              <td>${data.given.map(g => `${g.beer}: ${g.score}`).join(', ')}</td>
+            </tr>
+            `).join('')}
+          </table>
+        </div>` : ''}
+      </div>
+
+      <!-- Action buttons (hidden when printing) -->
+      <div class="flex flex-col sm:flex-row gap-3 no-print">
+        <button 
+          onclick="window.print()"
+          class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-lg text-lg transition-all transform hover:scale-105"
+        >
+          <i class="fas fa-print mr-2"></i> Print Resultaten
+        </button>
+        
+        <button 
+          onclick="location.reload()"
+          class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-6 rounded-lg text-lg transition-all transform hover:scale-105"
+        >
+          <i class="fas fa-redo mr-2"></i> Opnieuw Spelen
+        </button>
+      </div>
     </div>
   `;
 }
