@@ -202,7 +202,8 @@ function saveRoundHistory() {
     players: JSON.parse(JSON.stringify(state.players)),
     round: state.round,
     currentBeer: state.currentBeer ? JSON.parse(JSON.stringify(state.currentBeer)) : null,
-    scores: JSON.parse(JSON.stringify(state.scores))
+    scores: JSON.parse(JSON.stringify(state.scores)),
+    selectedScores: JSON.parse(JSON.stringify(selectedScores))
   };
   state.roundHistory.push(currentState);
 }
@@ -216,6 +217,7 @@ function goBackOneRound() {
   state.round = previousState.round;
   state.currentBeer = previousState.currentBeer;
   state.scores = previousState.scores;
+  selectedScores = previousState.selectedScores || {};
   
   // Flag that we're restoring from history
   window.restoringFromHistory = true;
@@ -255,11 +257,14 @@ function nextRound() {
 let selectedScores = {};
 
 function showLootboxAnimation(beers) {
+  const activePlayers = state.players.filter(p => !p.eliminated);
+  
   app.innerHTML = `
     <div class="bg-white rounded-2xl shadow-2xl p-4 sm:p-8 mt-4 sm:mt-8">
       <h2 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-4 sm:mb-6">
         Ronde ${state.round}
       </h2>
+      
       <div class="text-center">
         <h3 class="text-lg sm:text-2xl font-semibold text-amber-700 mb-4 sm:mb-6">
           <i class="fas fa-dice"></i> Willekeurige Selectie
@@ -302,6 +307,24 @@ function showLootboxAnimation(beers) {
           <div class="w-3 h-3 bg-amber-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
           <div class="w-3 h-3 bg-amber-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
         </div>
+      </div>
+      
+      <!-- Active Players Section -->
+      <div class="bg-blue-50 rounded-xl p-4 sm:p-6 mt-6">
+        <h3 class="text-lg sm:text-xl font-semibold text-blue-800 mb-3 text-center">
+          <i class="fas fa-users"></i> Actieve Spelers Deze Ronde
+        </h3>
+        <div class="flex flex-wrap justify-center gap-2 sm:gap-3">
+          ${activePlayers.map(p => `
+            <div class="bg-white rounded-lg px-3 py-2 border-2 border-blue-200 flex items-center gap-2">
+              <i class="fas fa-user-circle text-blue-600"></i>
+              <span class="text-sm sm:text-base font-medium text-blue-800">${p.name}</span>
+            </div>
+          `).join('')}
+        </div>
+        <p class="text-center text-blue-600 mt-3 text-sm sm:text-base">
+          ${activePlayers.length} ${activePlayers.length === 1 ? 'speler doet' : 'spelers doen'} mee
+        </p>
       </div>
     </div>
   `;
@@ -524,6 +547,17 @@ function renderRound() {
   `;
 
   document.querySelectorAll('.score-buttons').forEach(group => {
+    const player = group.dataset.player.trim().toLowerCase();
+    
+    // Restore previously selected score if any
+    if (selectedScores[player]) {
+      const selectedButton = group.querySelector(`[data-score="${selectedScores[player]}"]`);
+      if (selectedButton) {
+        selectedButton.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
+        selectedButton.classList.add('bg-amber-500', 'text-white', 'border-amber-600');
+      }
+    }
+    
     group.addEventListener('click', function(e) {
       if (e.target.classList.contains('score-btn')) {
         const score = parseInt(e.target.dataset.score);
